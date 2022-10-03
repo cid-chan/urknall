@@ -1,0 +1,52 @@
+Concepts
+========
+
+Stages
+  The initial stage has no futures to resolve,
+  the last stage should have no futures in need of resolving.
+
+  Each stage incurs a separate invocation of the modules resolving.
+  This is because each group provides additional resolved values
+  that have been created with the new state.
+
+  Stages are freely defined by the user.
+  They form a DAG that is topologically sorted.
+
+  Each stage has two outputs:
+  - provisionScript
+    # => Provision the calculated architecture
+
+  - resolverScript
+    # => Returns a JSON that returns additional resolved futures
+    #    to make available in the next stage.
+
+
+Example
+=======
+
+{ between, before, after, root, ... }:
+{
+  phys = root
+    { config, ... }:
+    {
+      pulumi.enable = true;
+      pulumi.hcloud.keys.test = {
+        name = "Hello, World!";
+        publicKey = "...";
+      };
+      pulumi.hcloud.servers.test = {
+        type = "cpx11";
+        privateKeys = config.pulumi.hcloud.keys.test;
+      };
+    };
+
+  deploy = after "phys"
+    { stages, ... }:
+    {
+      morph.enable = true;
+      morph.test =
+        {
+          deployment.ip = stages.phys.config.pulumi.hcloud.servers.ip;
+        };
+    }
+}

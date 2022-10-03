@@ -1,0 +1,6 @@
+{ ... }:
+{
+  imports = [
+    ./hcloud.nix
+  ];
+}

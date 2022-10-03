@@ -1,0 +1,47 @@
+{
+  inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+  inputs.flake-utils.url = "github:numtide/flake-utils";
+
+  outputs = { self, nixpkgs, flake-utils, ... }@inputs: 
+    let 
+      by-system = flake-utils.lib.eachSystem ["x86_64-linux"] (system: 
+        let
+          pkgs = import nixpkgs { inherit system; };
+        in
+        {
+          devShells.default = pkgs.mkShell {
+            buildInputs = [
+              pkgs.git-crypt
+            ];
+          };
+
+          packages.urknall = pkgs.writeScriptBin "urknall" (
+            let
+              rawScript = (builtins.readFile ./urknall/runner.sh);
+              replacements = {
+                urknall = toString ./urknall/urknall.nix;
+                root_path = toString ./.;
+              };
+
+              names = builtins.attrNames replacements;
+              key = map (k: "@${k}@") names;
+              values = map (k: toString (replacements.${k})) names;
+
+              replacedScript = nixpkgs.lib.replaceStrings key values rawScript;
+            in
+            ''
+              NIX_BIN_PATH=$(dirname $(which nix))
+              export PATH=${nixpkgs.lib.makeBinPath [pkgs.bash pkgs.jq pkgs.git]}:$NIX_BIN_PATH
+              ${replacedScript}
+            ''
+          );
+          packages.default = self.packages.${system}.urknall;
+        }
+      );
+
+      all-systems = {
+        lib = import ./lib inputs;
+      };
+    in
+    all-systems // by-system;
+}
