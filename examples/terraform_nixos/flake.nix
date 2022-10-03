@@ -19,7 +19,7 @@
                 };
                 provisioners.terraform.clouds.hcloud.servers.test = {
                   type = "cpx11";
-                  location = "fsn1";
+                  datacenter = "fsn1-dc14";
                   sshKeys = [
                     config.provisioners.terraform.clouds.hcloud.ssh-keys.personal.id
                   ];
