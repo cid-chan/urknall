@@ -102,7 +102,7 @@ in
 
     provisioners.packer.project.arguments = lib.mkIf (cfg.project.excludes != []) "$PKR_EXCLUDES";
 
-    infrastructure.destroyers = lib.mkIf (cfg.project.destroys != []) ''
+    urknall.destroyers = lib.mkIf (cfg.project.destroys != []) ''
       ${builtins.concatStringsSep "\n" (map (destroy: ''
         (
           ${destroy}
@@ -110,7 +110,7 @@ in
       '') cfg.project.destroys)}
     '';
 
-    infrastructure.resolvers = lib.mkIf (cfg.project.resolves != []) ''
+    urknall.resolvers = lib.mkIf (cfg.project.resolves != []) ''
       ${builtins.concatStringsSep "\n" (map (resolver: ''
         (
           ${resolver}

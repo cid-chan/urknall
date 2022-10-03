@@ -35,7 +35,7 @@ let
     builtins.listToAttrs (map (stage: {
       name = stage.name;
       value = nixpkgs.legacyPackages.${builtins.currentSystem}.writeShellScript "${stage.name}-${name}.sh" 
-        stage.eval.config.infrastructure.${name};
+        stage.eval.config.urknall.${name};
     }) stages);
 in
   {

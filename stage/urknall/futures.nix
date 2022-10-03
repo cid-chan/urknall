@@ -1,7 +1,7 @@
 { lib, config, localPkgs, ... }:
 {
   options = let inherit (lib) mkOption; inherit (lib.types) attrsOf string; in {
-    infrastructure = {
+    urknall = {
       resolveCommands = mkOption {
         type = attrsOf string;
         default = {};
@@ -14,8 +14,8 @@
   };
 
   config = {
-    infrastructure.resolvers = lib.mkMerge (lib.mapAttrsToList (key: value: ''
+    urknall.resolvers = lib.mkMerge (lib.mapAttrsToList (key: value: ''
       ${value} | ${localPkgs.jq}/bin/jq '{ "${key}": . }'
-    '') config.infrastructure.resolveCommands);
+    '') config.urknall.resolveCommands);
   };
 }

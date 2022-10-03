@@ -96,7 +96,7 @@
   };
 
   config = {
-    infrastructure.appliers = lib.mkMerge (lib.mapAttrsToList (name: server: 
+    urknall.appliers = lib.mkMerge (lib.mapAttrsToList (name: server: 
       let
         machine = import "${server.nixpkgs}/nixos/lib/eval-config.nix" {
           inherit (server) system;

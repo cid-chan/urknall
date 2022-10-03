@@ -16,7 +16,7 @@
   evaluateStage = { stage, stages ? {}, futures ? {} }:
     nixpkgs.lib.evalModules {
       modules = [
-        ./../modules
+        ./../stage
         stage.data
       ];
       specialArgs = {

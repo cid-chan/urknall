@@ -1,6 +1,6 @@
 {
   imports = [
-    ./infrastructure
+    ./urknall
     ./provisioners
     ./deployment
   ];

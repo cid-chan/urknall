@@ -1,7 +1,7 @@
 { lib, ... }:
 {
   options = let inherit (lib) mkOption; inherit (lib.types) lines; in {
-    infrastructure = {
+    urknall = {
       appliers = mkOption {
         type = lines;
         description = ''
@@ -29,16 +29,14 @@
   };
 
   config = {
-    infrastructure.appliers = lib.mkOrder 0
+    urknall.appliers = lib.mkOrder 0
       ''
         # Apply
-        # set -xueo pipefail
       '';
 
-    infrastructure.destroyers = lib.mkOrder 0
+    urknall.destroyers = lib.mkOrder 0
       ''
-        # Apply
-        # set -xueo pipefail
+        # Destroy
       '';
   };
 }
