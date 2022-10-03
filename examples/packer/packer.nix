@@ -1,6 +1,6 @@
 { localPkgs, ... }:
 {
-  config = {
+  config.stages.packer = {
     provisioners.packer.enable = true;
     provisioners.packer.hcloud.test = {
       serverType = "cx11";

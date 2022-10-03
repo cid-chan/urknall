@@ -1,6 +1,10 @@
 {
   inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
   inputs.flake-utils.url = "github:numtide/flake-utils";
+  inputs.flake-compat = {
+    url = "github:edolstra/flake-compat";
+    flake = false;
+  };
 
   outputs = { self, nixpkgs, flake-utils, ... }@inputs: 
     let 
@@ -19,8 +23,7 @@
             let
               rawScript = (builtins.readFile ./urknall/runner.sh);
               replacements = {
-                urknall = toString ./urknall/urknall.nix;
-                root_path = toString ./.;
+                urknall_nix = toString ./urknall/urknall.nix;
               };
 
               names = builtins.attrNames replacements;

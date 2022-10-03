@@ -1,103 +1,90 @@
-{ nixpkgs, dag, eval, lib, ... }:
+{ nixpkgs, flake-utils, dag, eval, futures, lib, ... }:
 {
-  header = {
-    root = dag.entryAnywhere;
-    between = dag.entryBetween;
-    before = dag.entryBefore;
-    after = dag.entryAfter;
-
-    merge = parents:
-      let
-        merger = dag.merge (l: r: { imports = [ l r ]; });
-      in
-      builtins.foldl' merger (builtins.head parents) (builtins.tail parents);
-  };
-
-  evaluateStage = { stage, stages ? {}, futures ? {} }:
-    nixpkgs.lib.evalModules {
-      modules = [
-        ./../stage
-        stage.data
-      ];
-      specialArgs = {
-        inherit futures stages;
-        environment = futures."!urknall";
-        stage = stage.name;
-        localPkgs = import nixpkgs {
-          system = builtins.currentSystem;
-        };
-        modulePath = ./../modules;
-        lib = nixpkgs.lib // { urknall = lib.__finished__; } // (lib.futures.buildFutures stage.name futures);
-      };
-    };
-
-  evaluate = { stages, futures ? {} }:
+  buildUrknall = 
+    { system, modules ? [], specialArgs ? {}
+    , stage ? "!urknall", futures ? {}
+    , pkgs ? import nixpkgs.outPath { inherit system; }
+    , ...
+    }@attrs:
     let
-      build = stages eval.header;
-      sorted = dag.topoSort build;
+      specialArgs = {
+        inherit stage futures;
 
-      evaluated =
-        builtins.foldl' (previousStages: currentStage: previousStages // {
-          "${currentStage.name}" = {
-            name = currentStage.name;
-            eval = eval.evaluateStage { 
-              inherit futures;
-              stage = currentStage;
-              stages = nixpkgs.lib.mapAttrs (k: v: v.eval.config) previousStages;
+        stagePath = ./../stage;
+        stackPath = ./../stacks;
+
+        modulesPath = throw "modulesPath is supported in urknall.";
+        localPkgs = pkgs;
+        stages = urknall.config.stages;
+      };
+
+      extraAttrs = builtins.removeAttrs attrs [ "modules" "stage" "specialArgs" "futures" "system" ];
+      extendedLib = 
+        nixpkgs.lib.extend(self: super: { 
+          urknall = lib.__finished__; 
+          mkFuture = lib.futures.mkFuture futures;
+
+          types = super.types // {
+            submodule = module: super.types.submoduleWith {
+              shorthandOnlyDefinesConfig = true;
+              modules = [ module ];
+              inherit specialArgs;
+            };
+
+            stageModule = module: super.types.submoduleWith {
+              modules = [ 
+                module 
+              ];
+              shorthandOnlyDefinesConfig = true;
+              inherit specialArgs;
             };
           };
-        }) {} sorted.result;
+        });
+
+      urknall =
+        extendedLib.evalModules ({
+          inherit specialArgs;
+          modules = [ ./../stacks/default.nix ] ++ modules;
+        }) // extraAttrs;
     in
-    if sorted ? result then
-      map (stage: evaluated.${stage.name}) sorted.result
-    else
-      throw "Found the following loops beginning with ${builtins.concatStringsSep ", " (map (e: e.name) sorted.loops)}";
+    urknall;
 
-
-  buildScript = { operation ? "none", stages, doResolves ? true }:
+  mkUrknall = { self, modules, ... }@attrs:
     let
-      ops = 
-        builtins.concatStringsSep "\n\n" (
-          map (stage: ''
-            ###
-            # Stage: ${stage.name}
-            mkdir -p $ROOT_DIR/stages/${stage.name}
-            export STAGE_DIR=$ROOT_DIR/stages/${stage.name}
+      extraAttrs = builtins.removeAttrs attrs [ "futures" "stage" "system" "modules" ];
 
-            pushd $ROOT_DIR/stages/${stage.name} >/dev/null 2>/dev/null
-            echo 'Starting Stage "${stage.name}"'
-            ${nixpkgs.lib.optionalString (operation != "none") ''
-              bash $(nix-build --no-out-link ${toString ../urknall/urknall.nix} --arg root_flake '"${toString ./..}"' --arg flake_path "\"$URKNALL_FLAKE_PATH\"" --arg stageFiles "\"$stage_files\"" -A "operations.${operation}.${stage.name}" "$NIX_ARGS")
-            ''}
+      evaluator = 
+        ({ localPkgs, ... }: {
+          urknall.build.evaluator =
+            { stage, operation, stageFileVar }:
+            "nix-build --no-out-link ${toString ./urknall/flakes.nix} --argstr path \"$URKNALL_FLAKE_PATH\" --argstr attr \"$URKNALL_FLAKE_ATTR\" --argstr \"\$${stageFileVar}\"";
+        });
 
-            ${nixpkgs.lib.optionalString (doResolves) ''
-              echo $(nix-build --no-out-link ${toString ../urknall/urknall.nix} --arg root_flake '"${toString ./..}"' --arg flake_path "\"$URKNALL_FLAKE_PATH\"" --arg stageFiles "\"$stage_files\"" -A "operations.resolvers.${stage.name}" "$NIX_ARGS")
-              bash $(nix-build --no-out-link ${toString ../urknall/urknall.nix} --arg root_flake '"${toString ./..}"' --arg flake_path "\"$URKNALL_FLAKE_PATH\"" --arg stageFiles "\"$stage_files\"" -A "operations.resolvers.${stage.name}" "$NIX_ARGS") | jq -s add | jq '{ "${stage.name}" : . }' > $RESOLVE_DIR/${stage.name}.json
-              if [[ -z "$stage_files" ]]; then
-                stage_files="$RESOLVE_DIR/${stage.name}.json"
-              else
-                stage_files="$stage_files;$RESOLVE_DIR/${stage.name}.json"
-              fi
-            ''}
-            popd >/dev/null 2>/dev/null
-          '') stages
-        );
+      urknall = 
+        { system, stage, stageFiles ? null }:
+        lib.buildUrknall ({
+          inherit system stage;
+          futures = futures.resolveFutures stageFiles;
+          modules = [evaluator] ++ modules;
+        } // extraAttrs);
+
+      makeOp = name:
+        args: (urknall args).config.build.${name};
     in
-    ''
-      # set -xueo pipefail
-      set -ueo pipefail
-      ROOT_DIR=$(mktemp -d)
-
-      export SHARE_DIR=$ROOT_DIR/shared
-      mkdir $SHARE_DIR
-
-      ${nixpkgs.lib.optionalString (doResolves) ''
-        mkdir -p $ROOT_DIR/resolves
-        RESOLVE_DIR=$ROOT_DIR/resolves
-        echo "{ \"!urknall\": { \"currentDirectory\": \"$URKNALL_LOCAL_DIRECTORY\" }}" > $ROOT_DIR/empty.json
-        stage_files=$ROOT_DIR/empty.json
-      ''}
-
-      ${ops}
-    '';
+    (builtins.listToAttrs (map (system: {
+      key = system;
+      value = 
+        let
+          instance = urknall { inherit system; stage = "!urknall"; };
+        in
+        { 
+          inherit modules;
+          urknall = instance;
+          runner = instance.urknall.build.run; 
+          stages = nixpkgs.lib.mapAttrs (_: stage: {
+            apply = stageFiles: (urknall { inherit system stageFiles; stage = stage.name; }).urknall.build.apply;
+            destroy = stageFiles: (urknall { inherit system stageFiles; stage = stage.name; }).urknall.build.destroy;
+          }) instance.stages;
+        };
+    })) );
 }

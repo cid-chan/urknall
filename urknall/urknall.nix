@@ -1,55 +1,41 @@
-{ flake_path, root_flake, stageFiles ? null }:
 let
-  urknall = builtins.getFlake root_flake;
-  nixpkgs = urknall.inputs.nixpkgs;
-
-  strace = s: builtins.trace s s;
-
-  stageResolves =
-    if stageFiles == "" || stageFiles == null then
-      {}
-    else
-      let 
-        pathes = nixpkgs.lib.splitString ";" stageFiles;
-        
-        ensureIsObject = v:
-          if v == null then
-            {}
-          else
-            v;
-      in 
-      builtins.foldl' (p: n: p//n) {} (map (path: ensureIsObject (builtins.fromJSON (builtins.readFile path))) pathes);
-
-  path = urknall.lib.flakes.getFlakePath flake_path;
-  attr = urknall.lib.flakes.getDataAttr "default" flake_path;
-
-  flake = builtins.getFlake path;
-
-  rawDag = urknall.lib.tryAttrs ["urknall.${attr}" attr] flake.outputs;
-  stages = urknall.lib.eval.evaluate {
-    stages = rawDag;
-    futures = stageResolves;
-  };
-
-  buildOperations = name:
-    builtins.listToAttrs (map (stage: {
-      name = stage.name;
-      value = nixpkgs.legacyPackages.${builtins.currentSystem}.writeShellScript "${stage.name}-${name}.sh" 
-        stage.eval.config.urknall.${name};
-    }) stages);
+  self =
+    (import
+      (
+        let lock = builtins.fromJSON (builtins.readFile ./../flake.lock); in
+        fetchTarball {
+          url = "https://github.com/edolstra/flake-compat/archive/${lock.nodes.flake-compat.locked.rev}.tar.gz";
+          sha256 = lock.nodes.flake-compat.locked.narHash;
+        }
+      )
+      { src = ./..; }
+    ).defaultNix;
 in
-  {
-    operations = {
-      run = buildOperations "appliers";
-      destroy = buildOperations "destroyers";
-      resolvers = buildOperations "resolvers";
+# Use system pkgs instead the one used by the flake.
+{ pkgs ? import <nixpkgs> {}, target ? builtins.getEnv "URKNALL_IMPURE_TARGET", stage ? "!urknall", stageFiles ? null }:
+let
+  urknall =
+    self.lib.buildUrknall {
+      inherit pkgs stage;
+      futures = self.lib.resolveFutures stageFiles;
+      system = builtins.currentSystem;
+      modules = [
+        target
+    
+        ({ localPkgs, ... }: {
+           urknall.build.evaluator =
+             { stage, operation, stageFileVar }:
+             "nix-build --no-out-link ${toString ./urknall.nix} -A ${operation} --argstr target \"$URKNALL_IMPURE_TARGET\" --argstr stage ${stage} --argstr stageFiles \"\$${stageFileVar}\"";
+        })
+      ];
     };
+in
+{
+  inherit urknall;
+  modules = [ target ];
 
-    scripts = {
-      run = urknall.lib.buildScript { operation = "run"; inherit stages; };
-      destroy = ''
-        ${urknall.lib.buildScript { operation = "none"; inherit stages; }}
-        ${urknall.lib.buildScript { operation = "destroy"; stages = (nixpkgs.lib.reverseList stages); doResolves = false;}}
-      '';
-    };
-  }
+  runner = urknall.config.urknall.build.run;
+  resolve = urknall.config.stages.${stage}.urknall.build.resolve;
+  apply = urknall.config.stages.${stage}.urknall.build.apply;
+  destroy = urknall.config.stages.${stage}.urknall.build.destroy;
+}

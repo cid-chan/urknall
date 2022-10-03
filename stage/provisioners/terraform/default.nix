@@ -188,7 +188,7 @@ in
 
               future = mkOption {
                 type = str;
-                default = lib.mkFuture config.id;
+                default = lib.mkFuture config.stage.name config.id;
                 readOnly = true;
                 description = ''
                   The resulting future.

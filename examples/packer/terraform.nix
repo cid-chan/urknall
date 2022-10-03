@@ -1,6 +1,8 @@
 { config, lib, stages, ... }:
 {
-  config = {
+  config.stages.terraform = {
+    stage.after = [ "packer" ];
+
     provisioners.terraform.enable = true;
     provisioners.terraform.backend.type = "local";
 

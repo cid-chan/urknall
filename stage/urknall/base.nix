@@ -27,16 +27,4 @@
       };
     };
   };
-
-  config = {
-    urknall.appliers = lib.mkOrder 0
-      ''
-        # Apply
-      '';
-
-    urknall.destroyers = lib.mkOrder 0
-      ''
-        # Destroy
-      '';
-  };
 }

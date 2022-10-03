@@ -1,36 +1,57 @@
 #!/usr/bin/env bash
 
+# Help messages
+if [[ -z "$1" ]]; then
+  echo "$0 (apply|destroy) [OPTIONS...]"
+  echo "run '$0 --help' for more information"
+  exit 1
+fi
+
 if [[ "$1" == "--help" ]]; then
-    echo "$0 (run|destroy) [FLAKE]"
-    echo "$(basename $0) manages declaratively defined infrastructures."
-    echo ""
-    echo "   run      - Creates updates the infrastructure"
-    echo "   destroy  - Destroys the infrastructure"
-    exit 0
-fi
-OPERATION="$1"
-
-if [[ "$2" == "--help" ]]; then
-    case "$1" in
-        run)
-            echo "$0 $OPERATION [FLAKE]"
-            echo "$(basename $0) creates the given infrastructure when using this command"
-            exit 0
-            ;;
-
-        destroy)
-            echo "$0 $OPERATION [FLAKE]"
-            echo "$(basename $0) destroys the given infrastructure when using this command"
-            exit 0
-            ;;
-    esac
+  echo "$0 (run|destroy) [NIX_FILE|FLAKE] [OPTIONS...]"
+  echo "$(basename $0) manages declaratively defined infrastructures."
+  echo ""
+  echo "   run      - Creates updates the infrastructure"
+  echo "   destroy  - Destroys the infrastructure"
+  exit 0
 fi
 
-FLAKE_PATH=$(realpath "$2")
-shift
+# Some book-keeping
+OPERATION=$1
+TARGET="$2"
 shift
 
-export URKNALL_FLAKE_PATH="$FLAKE_PATH"
+# Load the runner
+# Rewrites for legacy.
+if [[ -e "$TARGET/urknall.nix" ]]; then
+    TARGET="$TARGET/urknall.nix"
+elif [[ -e "$TARGET/default.nix" ]]; then
+    TARGET="$TARGET/default.nix";
+fi
+
+if [[ "$TARGET" == *.nix ]]; then
+  export URKNALL_IMPURE_TARGET=$(realpath "$TARGET")
+  RUNNER=$(nix-build --no-out-link @urknall_nix@ -A runner)
+
+else
+  if [[ "$TARGET" != *#* ]]; then
+    TARGET="${TARGET}#urknall.default"
+  fi
+  export CURRENT_SYSTEM=$(nix-instantiate --eval --json -E "builtins.currentSystem")
+  export URKNALL_FLAKE_PATH=$($(echo "$TARGET" | cut -d'#' -f1))
+
+  export URKNALL_FLAKE_ATTR=$(echo "$TARGET" | cut -d'#' -f2)
+  RUNNER=$(nix build ${TARGET}.${CURRENT_SYSTEM}.runner)
+fi
+
+# Prepare the urknall environment
+export URKNALL_ROOT_DIR=$(mktemp -d)
 export URKNALL_LOCAL_DIRECTORY="$PWD"
-export NIX_ARGS="$@"
-nix-instantiate --eval @urknall@ --json --arg flake_path "\"$FLAKE_PATH\"" --arg root_flake '"@root_path@"' -A "scripts.$OPERATION" "$@" | jq -r | bash
+
+# Run the actual script
+$RUNNER $OPERATION "$@"
+
+# Preserve Exit-Code and clean up.
+EXITCODE=$?
+rm -rf $ROOT_DIR
+exit $EXITCODE

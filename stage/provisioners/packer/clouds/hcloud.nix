@@ -1,5 +1,6 @@
-{ lib, config, localPkgs, stage, ... }:
+{ lib, config, localPkgs, ... }:
 let
+  stage = config.stage.name;
   cfg = config.provisioners.packer.hcloud;
 in
 {
@@ -49,7 +50,7 @@ in
           snapshotId = mkOption {
             type = int;
             readOnly = true;
-            default = lib.mkFuture "hcloud.${config._module.args.name}.id";
+            default = lib.mkFuture stage "hcloud.${config._module.args.name}.id";
             description = ''
               Will hold the ID of the hetzner snapshot.
             '';
@@ -87,7 +88,7 @@ in
             }) cfg;
           in
           ''
-            ${localPkgs.hcloud}/bin/hcloud image list -t snapshot -o json | jq -r '. // []    | map({key: .description, value: .id}) | map({key: ((${builtins.toJSON snapshots}|with_entries({key:.value,value:.key})))[.key], value:.value})| map(select(.key != null)) | from_entries'
+            ${localPkgs.hcloud}/bin/hcloud image list -t snapshot -o json -l 'urknall.dev/stage==${stage}' | jq -r '. // []    | map({key: .description, value: .id}) | map({key: ((${builtins.toJSON snapshots}|with_entries({key:.value,value:.key})))[.key], value:.value})| map(select(.key != null)) | from_entries'
           ''
         )
       ];
@@ -101,8 +102,8 @@ in
             }) cfg;
           in
           ''
-            #                                                                      null => []                       intersection snapshotName with available snapshots             map snapshotName to build source                                               make comma-separated
-            ${localPkgs.hcloud}/bin/hcloud image list -t snapshot -o json | jq -r '. // []    | map(.description) | . - (. - ${builtins.toJSON (builtins.attrValues snapshots)}) | map((${builtins.toJSON snapshots}|with_entries({key:.value,value:.key}))[.]) | join(",")'
+            #                                                                                                null => []                       intersection snapshotName with available snapshots             map snapshotName to build source                                               make comma-separated
+            ${localPkgs.hcloud}/bin/hcloud image list -t snapshot -o json -l 'urknall.dev/stage==${stage}' | jq -r '. // []    | map(.description) | . - (. - ${builtins.toJSON (builtins.attrValues snapshots)}) | map((${builtins.toJSON snapshots}|with_entries({key:.value,value:.key}))[.]) | join(",")'
           ''
         )
       ];
