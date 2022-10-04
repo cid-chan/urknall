@@ -211,12 +211,6 @@ in
         name = "${module.name}"
         datacenter = "${module.datacenter}"
         server_type = "${module.type}"
-        user_data = file("${
-          if module.btrfs then
-            assets.hcloud_server_cloud_init_btrfs.path
-          else
-            assets.hcloud_server_cloud_init_ext4.path
-        }")
 
         ${lib.optionalString (builtins.length module.sshKeys > 0) ''
           ssh_keys = [
@@ -253,6 +247,13 @@ in
 
         ${if module.snapshot == null then ''
           image = "ubuntu-22.04"
+          user_data = file("${
+            if module.btrfs then
+              assets.hcloud_server_cloud_init_btrfs.path
+            else
+              assets.hcloud_server_cloud_init_ext4.path
+          }")
+
           provisioner "local-exec" {
             when = create
             command = "./${assets.hcloud_server_wait_for_installed.path} ${lib.urknall.variable "self.ipv4_address"} ${lib.optionalString (module.privateKey != null) assets."hcloud_server_pk_${module.name}".path}"
