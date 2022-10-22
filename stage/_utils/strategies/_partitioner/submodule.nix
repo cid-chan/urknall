@@ -9,7 +9,7 @@ let
   };
 in
 {
-  options = let inherit (lib) mkOption; inherit (lib.types) str int oneOf enum nullOr; in {
+  options = let inherit (lib) mkOption; inherit (lib.types) str int oneOf enum nullOr bool; in {
     label = mkOption {
       type = str;
       default = config._module.args.name;
@@ -27,11 +27,26 @@ in
     };
 
     size = mkOption {
-      type = str;
+      type = nullOr str;
       description = ''
         The size of the partition.
         Tmpfs can only suffixed sizes.
         Everything else is managed by gparted.
+
+        If the size is null, no partition table will be written.
+        It is UB if size is null, but more than one partition is given for the same drive.
+      '';
+    };
+
+    reformat = mkOption {
+      type = bool;
+      default = true;
+      description = ''
+        If the partition type is already matching,
+        and it's label matches the label given to it,
+        and the drive has no partition-table,
+        and this value is set to false,
+        then reformatting will be skipped.
       '';
     };
 

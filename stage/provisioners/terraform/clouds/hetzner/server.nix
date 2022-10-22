@@ -95,14 +95,6 @@ in
             '';
           };
 
-          btrfs = mkOption {
-            type = bool;
-            default = false;
-            description = ''
-              Make a server with btrfs running on it.
-            '';
-          };
-
           snapshot = mkOption {
             type = nullOr int;
             default = null;
@@ -129,6 +121,17 @@ in
             type = nullOr (attrsOf (submodule (import ./../../../../_utils/strategies/files/submodule.nix)));
             description = ''
               Additional files to copy to the target
+            '';
+          };
+
+          volumes = mkOption {
+            type = listOf str;
+            default = [];
+            description = ''
+              List of volumes to add.
+              Define volumes using `hcloud.volumes`.
+              For hcloud.server.[name].files, the volumes will be accessible as `/tmp/volume/[name]`.
+              For subsequent stages, the disk-path will be accessible using the future `hcloud.volumes.[name].diskPath` 
             '';
           };
 
@@ -204,6 +207,10 @@ in
       (lib.mkIf (cfg.servers != {}) {
         hcloud_server_wait_for_installed = {
           file = toString ./wait_for_nixos.sh;
+          chmod = "755";
+        };
+        hcloud_server_name_volumes = {
+          file = toString ./mount_volumes.sh;
           chmod = "755";
         };
       })
@@ -319,6 +326,66 @@ in
         }
       ''}
 
+      ${builtins.concatStringsSep "\n" (map (volume: ''
+        resource "hcloud_volume_attachment" "${module.name}_${volume}" {
+          volume_id = hcloud_volume.${volume}.id
+          server_id = hcloud_server.${module.name}.id
+          automount = false
+        }
+      '') module.volumes)}
+
+      resource "null_resource" "hcloud_server_${module.name}_provision" {
+        triggers = {
+          server_id = "${lib.urknall.variable "hcloud_server.${module.name}.id"}"
+        }
+
+        ${if module.snapshot == null then ''
+          ${lib.optionalString (module.system != null) ''
+            ${lib.optionalString ((builtins.length module.volumes) > 0) ''
+              provisioner "local-exec" {
+                when = create
+                command = "VOLUMES='${builtins.concatStringsSep " " (map (volume: "${volume}=${lib.urknall.variable "hcloud_volume.${volume}.id"}") module.volumes)}' ${assets.hcloud_server_name_volumes.path} ${lib.urknall.variable "hcloud_server.${module.name}.ipv4_address"}"
+              }
+            ''}
+
+            provisioner "local-exec" {
+              when = create
+              command = "${localPkgs.callPackage ./../../../../_utils/strategies/rescue {
+                inherit lib;
+                module = module.system;
+                tableType = "dos";
+
+                preActivate = "${(localPkgs.callPackage ./../../../../_utils/strategies/files {
+                  inherit lib;
+                  module = module.files;
+                  targetRewriter = (path: "/mnt${path}");
+                })} $IPADDR";
+
+                rebootAfterInstall = true;
+              }} ${lib.urknall.variable "hcloud_server.${module.name}.ipv4_address"}"
+            }
+
+            provisioner "local-exec" {
+              when = create
+              command = "${assets.hcloud_server_wait_for_installed.path} ${lib.urknall.variable "hcloud_server.${module.name}.ipv4_address"}"
+            }
+          ''}
+        '' else ''
+          provisioner "local-exec" {
+            when = create
+            command = "${assets.hcloud_server_wait_for_installed.path} ${lib.urknall.variable "hcloud_server.${module.name}.ipv4_address"}"
+          }
+        ''}
+
+        ${lib.optionalString ((module.files != {}) && (module.system == null)) (
+          ''
+          provisioner "local-exec" {
+            when = create
+            command = "${assets."hcloud_server_files_${module.name}_upload".path} ${lib.urknall.variable "self.ipv4_address"} ${lib.optionalString (module.privateKey != null) assets."hcloud_server_pk_${module.name}".path}"
+          }
+        '')}
+      }
+
       resource "hcloud_server" "${module.name}" {
         name = "${module.name}"
         datacenter = "${module.datacenter}"
@@ -370,48 +437,12 @@ in
 
         ${if module.snapshot == null then ''
           image = "ubuntu-22.04"
-
           ${lib.optionalString (module.system != null) ''
             rescue = "linux64"
-
-            provisioner "local-exec" {
-              when = create
-              command = "${localPkgs.callPackage ./../../../../_utils/strategies/rescue {
-                inherit lib;
-                module = module.system;
-                tableType = "dos";
-
-                preActivate = "${(localPkgs.callPackage ./../../../../_utils/strategies/files {
-                  inherit lib;
-                  module = module.files;
-                  targetRewriter = (path: "/mnt${path}");
-                })} $IPADDR";
-
-                rebootAfterInstall = true;
-              }} ${lib.urknall.variable "self.ipv4_address"}"
-            }
-
-            provisioner "local-exec" {
-              when = create
-              command = "${assets.hcloud_server_wait_for_installed.path} ${lib.urknall.variable "self.ipv4_address"}"
-            }
           ''}
         '' else ''
           image = ${toString module.snapshot}
-
-          provisioner "local-exec" {
-            when = create
-            command = "${assets.hcloud_server_wait_for_installed.path} ${lib.urknall.variable "self.ipv4_address"}"
-          }
         ''}
-
-          ${lib.optionalString ((module.files != {}) && (module.system == null)) (
-            ''
-            provisioner "local-exec" {
-              when = create
-              command = "${assets."hcloud_server_files_${module.name}_upload".path} ${lib.urknall.variable "self.ipv4_address"} ${lib.optionalString (module.privateKey != null) assets."hcloud_server_pk_${module.name}".path}"
-            }
-          '')}
 
         ${module.extraConfig}
       }

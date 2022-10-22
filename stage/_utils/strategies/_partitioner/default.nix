@@ -58,6 +58,31 @@ let
     (drive: builtins.elem drive.fsType [ "ext2" "ext3" "ext4" "btrfs" "vfat" "swap" ])
     driveList;
 
+  requiresReformatCheckScript = drive: part:
+    let
+      funcMap = {
+        tmpfs = device: drive: "return 1";
+        swap = device: drive: ''
+          if [[ "$(${util-linux}/bin/blkid -o value -s TYPE ${drive})" != "swap" ]]; then
+            return 0
+          fi
+
+          return 0
+        '';
+      };
+    in
+    (utils.byMap funcMap (drive: part: ''
+       if [[ "$(${util-linux}/bin/blkid -o value -s TYPE ${drive})" != "${part.fsType}" ]]; then
+         return 0
+       fi
+
+       if [[ "$(${util-linux}/bin/blkid -o value -s LABEL ${drive})" != "${part.label}" ]]; then
+         return 0
+       fi
+
+       return 1
+    '') part.fsType) drive part;
+
   formatScript = d: part:
     let
       funcMap = {
@@ -123,12 +148,34 @@ in
         let 
           sfdiskScript = writeText "sfdisk-script" (partitioner.${tableType} drive partitions);
           format = lib.lists.imap1 (i: part: formatScript (utils.addPartitionIndex drive i) part) partitions;
+
+          firstPart = builtins.head partitions;
+
+          table = 
+            (builtins.length partitions == 1)
+            -> firstPart.size != null;
+
+          checkScript =
+            if firstPart.reformat then
+              "return 0"
+            else
+              requiresReformatCheckScript drive firstPart;
         in 
-        ''
-          wipefs -fa ${drive}
-          cat ${sfdiskScript} | sfdisk ${drive}
-          ${builtins.concatStringsSep "\n" format}
-        ''
+        if table then
+          ''
+            ${lib.optionalString (drive != "none") ''
+              wipefs -fa ${drive}
+              cat ${sfdiskScript} | sfdisk ${drive}
+            ''}
+            ${builtins.concatStringsSep "\n" format}
+          ''
+        else
+          ''
+            if (__chk() { ${checkScript} }; __chk); then
+              ${lib.optionalString (drive != "none") "wipefs -fa ${drive}"}
+              ${formatScript drive firstPart}
+            fi
+          ''
       ) byDrive;
     in
     writeShellScript "format" ''

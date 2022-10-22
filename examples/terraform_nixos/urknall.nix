@@ -1,4 +1,7 @@
 { config, localPkgs, lib, ... }:
+let
+  dc = "fsn1-dc14";
+in
 {
   config.stages.terraform = {
     provisioners.terraform.enable = true;
@@ -8,11 +11,19 @@
     provisioners.terraform.clouds.hcloud.ssh-keys.personal = {
       key = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKx7k8rivHnvsM+AqUhtXXousbwAwGHDFHa3TFrCQgpB";
     };
+    provisioners.terraform.clouds.hcloud.volumes.test = {
+      datacenter = dc;
+      size = 10;
+    };
+
     provisioners.terraform.clouds.hcloud.servers.test = {
       type = "cpx11";
-      datacenter = "fsn1-dc14";
+      datacenter = dc;
       sshKeys = [
         config.stages.terraform.provisioners.terraform.clouds.hcloud.ssh-keys.personal.id
+      ];
+      volumes = [
+        "test"
       ];
 
       system = {
@@ -28,6 +39,13 @@
             mountPoint = "/boot";
             fsType = "ext4";
             size = "2G";
+          };
+          persist = {
+            drive = "/tmp/volumes/test";
+            mountPoint = "/persist";
+            fsType = "btrfs";
+            size = null;
+            reformat = false;
           };
         };
 
@@ -54,6 +72,10 @@
               fileSystems."/boot" = {
                 device = "/dev/sda1";
                 fsType = "ext4";
+              };
+              fileSystems."/persist" = {
+                device = "/dev/disk/by-label/persist";
+                fsType = "btrfs";
               };
             };
           });
@@ -89,6 +111,11 @@
               device = "/dev/sda1";
               fsType = "ext4";
             };
+            fileSystems."/persist" = {
+              device = "/dev/disk/by-label/persist";
+              fsType = "btrfs";
+            };
+
             boot.cleanTmpDir = true;
             zramSwap.enable = true;
             networking.hostName = lib.mkDefault "test";
