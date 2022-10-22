@@ -1,5 +1,6 @@
 { lib, config, localPkgs, ... }:
 let
+  rootConfig = config;
   cfg = config.provisioners.terraform;
 
   module = 
@@ -36,7 +37,7 @@ let
     localPkgs.runCommand "main.tf" {} ''
       cd /build
       dd if=${rawFile} of=./main.tf
-      ${localPkgs.terraform}/bin/terraform fmt -list=false /build
+      ${localPkgs.terraform}/bin/terraform fmt -list=false /build || (cat ${rawFile} && exit 1)
       cp ./main.tf $out
     '';
 
@@ -188,7 +189,7 @@ in
 
               future = mkOption {
                 type = str;
-                default = lib.mkFuture config.stage.name config.id;
+                default = lib.mkFuture rootConfig.stage.name config.id;
                 readOnly = true;
                 description = ''
                   The resulting future.

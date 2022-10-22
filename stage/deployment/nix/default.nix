@@ -83,8 +83,13 @@
             '';
           };
 
-          configuration = mkOption {
-            type = raw;
+          config = mkOption {
+            type = lib.types.nixosConfigWith {
+              inherit (config) system;
+              extraModules = {
+                networking.hostName = lib.mkDefault config._module.args.name;
+              };
+            };
             description = ''
               The NixOS Configuration to deploy.
             '';
@@ -98,24 +103,7 @@
   config = {
     urknall.appliers = lib.mkMerge (lib.mapAttrsToList (name: server: 
       let
-        machine = import "${server.nixpkgs}/nixos/lib/eval-config.nix" {
-          inherit (server) system;
-          specialArgs = {
-            inherit lib stage;
-            stages = stages // { 
-              "${stage}" = {
-                inherit config;
-              };
-            };
-          };
-          modules = [
-            ({
-              imports = [
-                server.configuration
-              ];
-            })
-          ];
-        };
+        toplevel = server.config.config.system.build.toplevel;
 
         fakeSSH = localPkgs.writeShellScriptBin "ssh" ''
           exec ${localPkgs.openssh}/bin/ssh \
@@ -128,24 +116,24 @@
         (
           PATH="${fakeSSH}/bin:$PATH" nix-copy-closure \
             ${lib.optionalString (server.substituteOnDestination) "--use-substitutes"} \
-            --to ssh://${server.user}@${server.ip} ${machine.config.system.build.toplevel}
+            --to ssh://${server.user}@${server.ip} ${toplevel}
 
           ssh \
             ${lib.optionalString (!server.checkHostKeys) "-oUserKnownHostsFile=/dev/null -oStrictHostKeyChecking=no"} \
             ${server.user}@${server.ip} \
             -- \
             ${lib.optionalString (server.useRemoteSudo) "sudo"} \
-            nix-env --profile /nix/var/nix/profiles/${server.profile} -i ${machine.config.system.build.toplevel}
+            nix-env --profile /nix/var/nix/profiles/${server.profile} -i ${toplevel}
 
           ssh \
             ${lib.optionalString (!server.checkHostKeys) "-oUserKnownHostsFile=/dev/null -oStrictHostKeyChecking=no"} \
             ${server.user}@${server.ip} \
             -- \
             ${lib.optionalString (server.useRemoteSudo) "sudo"} \
-            ${machine.config.system.build.toplevel}/bin/switch-to-configuration ${server.applyMode}
+            ${toplevel}/bin/switch-to-configuration ${server.applyMode}
         )
       ''
-    ) config.deployments.nix-v3);
+    ) config.deployments.nix);
   };
 }
 

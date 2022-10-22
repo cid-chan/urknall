@@ -8,7 +8,7 @@ in
     provisioners.packer.hcloud = mkOption {
       type = attrsOf (submodule ({ config, ... }: {
         imports = [
-          ./../strategies/rescue/submodule.nix
+          (import ./../../../_utils/strategies/rescue/submodule.nix { system = "x86_64-linux"; })
         ];
         options = {
           location = mkOption {
@@ -27,21 +27,50 @@ in
             default = "cx11";
           };
 
+          files = mkOption {
+            type = attrsOf (submodule (import ./../../../_utils/strategies/files/submodule.nix));
+            default = {};
+            description = ''
+              Files to copy to the remote server
+            '';
+          };
+
+          __filePackage = mkOption {
+            type = package;
+            internal = true;
+            readOnly = true;
+            default = localPkgs.callPackage ./../../../_utils/strategies/files {
+              inherit lib;
+              module = config.files;
+              targetRewriter = (path: "/mnt${path}");
+            };
+          };
+
           __builderPackage = mkOption {
             type = package;
             internal = true;
             readOnly = true;
-            default = localPkgs.callPackage ./../strategies/rescue {
+            default = localPkgs.callPackage ./../../../_utils/strategies/rescue {
               inherit lib;
               module = config;
               tableType = "dos";
+              preActivate = let k = config._module.args.name; in ''
+                ${config.__filePackage} $(cat hcloud-${k}-ip) hcloud-${k}-pkr.private.key
+              '';
             };
           };
 
           snapshotName = mkOption {
             type = str;
             readOnly = true;
-            default = "${lib.urknall.derivationHash config.__builderPackage}-${config._module.args.name}";
+            default = 
+              let
+                # Add all scripts to run here.
+                derivationCode = localPkgs.writeText "${config._module.args.name}" ''
+                  ${config.__builderPackage}
+                '';
+              in
+              "${builtins.baseNameOf (derivationCode.outPath)}";
             description = ''
               The name of the snapshot on Hetzner Cloud.
             '';

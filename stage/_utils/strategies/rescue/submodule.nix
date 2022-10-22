@@ -1,3 +1,4 @@
+{ system }:
 { config, lib, ... }:
 {
   options = let inherit (lib) mkOption; inherit (lib.types) attrsOf submodule raw; in {
@@ -8,8 +9,10 @@
       '';
     };
 
-    nixosSystem = mkOption {
-      type = raw;
+    config = mkOption {
+      type = lib.types.nixosConfigWith {
+        inherit system;
+      };
       description = ''
         The nixos-system to build
       '';

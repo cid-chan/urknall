@@ -1,4 +1,4 @@
-{ config, lib, stages, ... }:
+{ config, lib, stages, localPkgs, ... }:
 {
   config.stages.terraform = {
     stage.after = [ "packer" ];
@@ -12,6 +12,13 @@
       datacenter = "fsn1-dc14";
       snapshot = stages.packer.provisioners.packer.hcloud.test.snapshotId;
       rdns = "test.tf-example-packer.urknall.dev";
+      files = {
+        "/etc/nixos/terraform.txt".file = 
+          localPkgs.writeText "terraform.txt" ''
+            This file has been generated on Urknall.
+            This file has been provisioned with Hashicorp Terraform.
+          '';
+      };
     };
   };
 }

@@ -26,9 +26,8 @@ let
     in
     localPkgs.runCommand "main.pkr.hcl" {} ''
       cd /build
-      cat ${rawFile}
       dd if=${rawFile} of=./main.pkr.hcl
-      ${localPkgs.packer}/bin/packer fmt /build
+      ${localPkgs.packer}/bin/packer fmt /build || (cat ${rawFile} && false)
       cp ./main.pkr.hcl $out
     '';
 

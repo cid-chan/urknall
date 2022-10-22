@@ -64,7 +64,7 @@ let
       stage = stage.name;
       operation = "apply";
       stageFileVar = "stage_files";
-    }})
+    }} --show-trace)
     popd
   '';
 
@@ -142,6 +142,11 @@ in
           destroy)
             exec ${config.urknall.build.destroy} "$@"
             ;;
+
+          *)
+            echo Unknown operation "'$OPERATION'".
+            echo "urknall [apply|destroy] [TARGET]"
+            exit 1
         esac
       '';
   };

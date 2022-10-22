@@ -57,6 +57,17 @@ in
   };
 
   config = {
+    provisioners.terraform.backend.providers = {
+      null = {
+        source = "hashicorp/null";
+        version = "3.1.1";
+      };
+
+      external = {
+        source = "hashicorp/external";
+        version = "2.2.2";
+      };
+    };
     provisioners.terraform.project.module = ''
       terraform {
         ${cfg.backend.terraformBlock}

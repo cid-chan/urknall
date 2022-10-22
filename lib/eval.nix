@@ -7,6 +7,8 @@
     , ...
     }@attrs:
     let
+      rootSystem = system;
+
       specialArgs = {
         inherit stage futures;
 
@@ -25,6 +27,38 @@
           mkFuture = lib.futures.mkFuture futures;
 
           types = super.types // {
+            nixosConfigWith = { extraModules ? [], specialArgs ? {}, system ? null}: 
+              super.types.mkOptionType {
+                name = "Toplevel NixOS Config.";
+                description = ''
+                  A specification of the desired configuration of the target.
+                '';
+
+                merge = loc: defs: (import "${toString nixpkgs}/nixos/lib/eval-config.nix") {
+                  specialArgs = {
+                    inherit self futures;
+                  } // specialArgs;
+
+                  modules = [
+                    ({
+                      _file = "module at ${__curPos.file}:${toString __curPos.line}";
+                      nixpkgs = 
+                        if system == rootSystem then
+                          {
+                            hostPlatform = system;
+                          }
+                        else
+                          {
+                            buildPlatform = rootSystem;
+                            hostPlatform = system;
+                          };
+                    })
+                  ] ++ (map (x: x.value) defs);
+                };
+              };
+
+            nixosConfig = self.types.nixosConfigWith {};
+
             submodule = module: super.types.submoduleWith {
               shorthandOnlyDefinesConfig = true;
               modules = [ module ];

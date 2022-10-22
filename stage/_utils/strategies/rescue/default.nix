@@ -1,4 +1,9 @@
-{ module, tableType, writeShellScript, writeShellScriptBin, openssh, callPackage, lib }:
+{ module, tableType
+, preActivate ? "", rebootAfterInstall ? false
+, writeShellScript, writeShellScriptBin
+, openssh
+, callPackage, lib
+}:
 let
   partition = callPackage ./../_partitioner {
     inherit lib;
@@ -6,26 +11,12 @@ let
     driveSet = module.drives;
   };
 
-  fakeSSH = writeShellScriptBin "ssh" ''
-    exec ${openssh}/bin/ssh \
-      -oUserKnownHostsFile=/dev/null -oStrictHostKeyChecking=no \
-      -i "$SSH_KEY" \
-      "$@"
-  '';
-
-  fakeSCP = writeShellScriptBin "scp" ''
-    exec ${openssh}/bin/scp \
-      -oUserKnownHostsFile=/dev/null -oStrictHostKeyChecking=no \
-      -i "$SSH_KEY" \
-      "$@"
-  '';
-
-  system = module.nixosSystem.config.system.build.toplevel;
+  system = module.config.config.system.build.toplevel;
 in
 writeShellScript "provision" ''
   IPADDR="$1"
   export SSH_KEY="$(realpath "$2")"
-  export PATH=${fakeSSH}/bin:${fakeSCP}/bin:$PATH
+  export PATH=${(callPackage ./../../ssh.nix {}).path}:$PATH
 
   runScript() {
     local name=$1
@@ -61,8 +52,17 @@ writeShellScript "provision" ''
   # Disable the hack we just did to copy the installed system
   ssh root@$IPADDR -- umount /nix
 
+  # Pre-Activate-Script
+  (
+    ${preActivate}
+  ) || exit 1
+
   # Prepare the nix store for direct push
   runScript ${./switch.sh} switch.sh ${system}
+
+  ${lib.optionalString rebootAfterInstall ''
+    ssh root@$IPADDR -- reboot
+  ''}
 
   # We have liftoff!
   echo '=== === DONE === ==='

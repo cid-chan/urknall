@@ -21,6 +21,14 @@
         };
       };
 
+      files = {
+        "/etc/nixos/packer.txt".file = 
+          localPkgs.writeText "packer.txt" ''
+            This file has been generated on Urknall.
+            This file has been provisioned with Hashicorp Packer.
+          '';
+      };
+
       nixosSystem = (import "${localPkgs.path}/nixos/lib/eval-config.nix" {
         system = "x86_64-linux";
         modules = [

@@ -1,8 +1,43 @@
-{ config, lib, localPkgs, ... }:
+{ config, lib, localPkgs, stage, ... }:
 let
   cfg = config.provisioners.terraform.clouds.hcloud;
   outputs = config.provisioners.terraform.project.outputs;
   assets = config.provisioners.terraform.project.assets;
+
+  scriptPreface = 
+    let
+      ssh = localPkgs.callPackage ./../../../../_utils/ssh.nix { withExec = false; nixSsh = false; };
+    in
+    ''
+      IPADDR="$1"
+      if [[ ! -z "$2" ]]; then 
+        export SSH_KEY="$(realpath "$2")"
+      fi
+
+      set -xueo pipefail
+
+      rssh() {
+        ${ssh.fakeSSH.text}
+      }
+
+      rscp() {
+        ${ssh.fakeSCP.text}
+      }
+    '';
+
+  generateFileRenameMap = module:
+    let
+      fileEntries = lib.mapAttrsToList (name: value: { inherit name value; }) module.files;
+      renames = lib.imap0 (idx: entry: {
+        name = entry.name;
+        value = {
+          key = "hcloud_server_files_${module.name}_${toString idx}";
+          renamed = "assets/hcloud_server_files_${module.name}_${toString idx}";
+          file = entry.value.file;
+        };
+      }) fileEntries;
+    in
+    builtins.listToAttrs renames;
 in
 {
   options = let inherit (lib) mkOption; inherit (lib.types) attrsOf submodule listOf nullOr anything enum str oneOf bool lines int; in {
@@ -73,7 +108,27 @@ in
             default = null;
             description = ''
               Use the snapshot with the given id.
-              If this option is given, privateKey and sshKeys are not used.
+              If this option is given sshKeys are not used.
+
+              Install this NixOS System. Snapshot and nixosSystem are mutually incompatible.
+            '';
+          };
+
+          system = mkOption {
+            type = nullOr (submodule (import ./../../../../_utils/strategies/rescue/submodule.nix { system = "x86_64-linux"; }));
+            default = null;
+            description = ''
+              Install this NixOS System.
+
+              Snapshot and nixosSystem are mutually incompatible.
+              Using this option is not supported with TerraForm cloud.
+            '';
+          };
+
+          files = mkOption {
+            type = nullOr (attrsOf (submodule (import ./../../../../_utils/strategies/files/submodule.nix)));
+            description = ''
+              Additional files to copy to the target
             '';
           };
 
@@ -82,6 +137,14 @@ in
             default = "";
             description = ''
               Extra options to put in the terraform resource.
+            '';
+          };
+
+          labels = mkOption {
+            type = attrsOf str;
+            default = {};
+            description = ''
+              Labels to apply to a server.
             '';
           };
 
@@ -112,15 +175,6 @@ in
             '';
           };
 
-          nixosModule = mkOption {
-            type = anything;
-            readOnly = true;
-            default = import ./nixos-module.nix { inherit (config) name btrfs; };
-            description = ''
-              A NixOS-module that includes a configuration suitable for the hetzner vps.
-            '';
-          };
-
           addresses = {
             ipv4 = mkOption {
               type = str;
@@ -148,20 +202,62 @@ in
   config = {
     provisioners.terraform.project.assets = lib.mkMerge [
       (lib.mkIf (cfg.servers != {}) {
-        hcloud_server_cloud_init_ext4.file = toString ./cloudinit_ext4.yml;
-        hcloud_server_cloud_init_btrfs.file = toString ./cloudinit_btrfs.yml;
         hcloud_server_wait_for_installed = {
           file = toString ./wait_for_nixos.sh;
           chmod = "755";
         };
       })
 
-      (lib.mkMerge (map (server: {
-        "hcloud_server_pk_${server.name}" = lib.mkIf (server.privateKey != null) {
-          file = server.privateKey;
-          chmod = "0600";
-        };
-      }) (builtins.attrValues cfg.servers)))
+      (lib.mkMerge (map (server: lib.mkMerge [
+        ({
+          "hcloud_server_pk_${server.name}" = lib.mkIf (server.privateKey != null) {
+            file = server.privateKey;
+            chmod = "0600";
+          };
+
+          "hcloud_server_${server.name}_primary_ip_workaround" = lib.mkIf (server.ipv4 != false && server.ipv6 != false) {
+            file = toString (localPkgs.writeText "primary-ip-workaround" ''
+              #!/usr/bin/env bash
+              sleep 5
+              echo '{ "text": "unused" }'
+            '');
+            chmod = "0755";
+          };
+        })
+
+        (lib.mkIf (server.files != {}) {
+          "hcloud_server_files_${server.name}_upload" = {
+            file = 
+              let
+                paths = builtins.attrNames server.files;
+                renames = generateFileRenameMap server;
+                commands = map (path:
+                  let 
+                    file = server.files.${path};
+                  in 
+                  ''
+                  rssh root@$IPADDR -- mkdir -p $(dirname ${path})
+                  rscp ${renames.${path}.renamed} root@$IPADDR:${path}
+                  rssh root@$IPADDR -- chown ${file.user}:${file.group} ${path}
+                  rssh root@$IPADDR -- chmod ${file.mode} ${path}
+                  ''
+                ) paths;
+              in
+              toString (localPkgs.writeText "mkdirs.sh" ''
+                #!/usr/bin/env bash
+                ${scriptPreface}
+                ${builtins.concatStringsSep "\n" commands}
+              '');
+            chmod = "0755";
+          };
+        })
+
+        (lib.mkMerge (map (file: {
+          "${file.key}" = lib.mkIf (file.file != null) {
+            file = toString file.file;
+          };
+        }) (builtins.attrValues (generateFileRenameMap server))))
+      ]) (builtins.attrValues cfg.servers)))
     ];
 
     provisioners.terraform.project.setup = lib.mkIf (cfg.servers != {}) ''
@@ -207,6 +303,22 @@ in
         ''}
       ''}
 
+      ${lib.optionalString (module.ipv4 != false && module.ipv6 != false) ''
+        resource "null_resource" "hcloud_server_${module.name}_primary_ip_workaround_bind_late" {
+          triggers = {
+            always_run = timestamp()
+          }
+        }
+
+        data "external" "hcloud_server_${module.name}_primary_ip_workaround" {
+          depends_on = [
+            null_resource.hcloud_server_${module.name}_primary_ip_workaround_bind_late
+          ]
+
+          program = [ "sh", "-c", "${assets."hcloud_server_${module.name}_primary_ip_workaround".path}" ]
+        }
+      ''}
+
       resource "hcloud_server" "${module.name}" {
         name = "${module.name}"
         datacenter = "${module.datacenter}"
@@ -245,22 +357,61 @@ in
           ''}
         }
 
+        labels = {
+          ${lib.optionalString (module.ipv4 != false && module.ipv6 != false) ''
+            "urknall.dev/primary-ip-workaround" : data.external.hcloud_server_${module.name}_primary_ip_workaround.result.text,
+          ''}
+          "urknall.dev/stage" : "${stage}",
+          "urknall.dev/name" : "${module.name}"${lib.optionalString (module.labels != {}) ","}
+          ${builtins.concatStringsSep ",\n" (lib.mapAttrsToList (k: v: ''
+            "${k}" : "${v}"
+          '') module.labels)}
+        }
+
         ${if module.snapshot == null then ''
           image = "ubuntu-22.04"
-          user_data = file("${
-            if module.btrfs then
-              assets.hcloud_server_cloud_init_btrfs.path
-            else
-              assets.hcloud_server_cloud_init_ext4.path
-          }")
+
+          ${lib.optionalString (module.system != null) ''
+            rescue = "linux64"
+
+            provisioner "local-exec" {
+              when = create
+              command = "${localPkgs.callPackage ./../../../../_utils/strategies/rescue {
+                inherit lib;
+                module = module.system;
+                tableType = "dos";
+
+                preActivate = "${(localPkgs.callPackage ./../../../../_utils/strategies/files {
+                  inherit lib;
+                  module = module.files;
+                  targetRewriter = (path: "/mnt${path}");
+                })} $IPADDR";
+
+                rebootAfterInstall = true;
+              }} ${lib.urknall.variable "self.ipv4_address"}"
+            }
+
+            provisioner "local-exec" {
+              when = create
+              command = "${assets.hcloud_server_wait_for_installed.path} ${lib.urknall.variable "self.ipv4_address"}"
+            }
+          ''}
+        '' else ''
+          image = ${toString module.snapshot}
 
           provisioner "local-exec" {
             when = create
-            command = "./${assets.hcloud_server_wait_for_installed.path} ${lib.urknall.variable "self.ipv4_address"} ${lib.optionalString (module.privateKey != null) assets."hcloud_server_pk_${module.name}".path}"
+            command = "${assets.hcloud_server_wait_for_installed.path} ${lib.urknall.variable "self.ipv4_address"}"
           }
-        '' else ''
-          image = ${toString module.snapshot}
         ''}
+
+          ${lib.optionalString ((module.files != {}) && (module.system == null)) (
+            ''
+            provisioner "local-exec" {
+              when = create
+              command = "${assets."hcloud_server_files_${module.name}_upload".path} ${lib.urknall.variable "self.ipv4_address"} ${lib.optionalString (module.privateKey != null) assets."hcloud_server_pk_${module.name}".path}"
+            }
+          '')}
 
         ${module.extraConfig}
       }

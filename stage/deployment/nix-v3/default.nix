@@ -83,8 +83,15 @@
             '';
           };
 
-          configuration = mkOption {
-            type = raw;
+          config = mkOption {
+            type = lib.types.nixosConfigWith {
+              inherit (config) system;
+              extraModules = [
+                {
+                  networking.hostName = lib.mkDefault config._module.args.name;
+                }
+              ];
+            };
             description = ''
               The NixOS Configuration to deploy.
             '';
@@ -98,24 +105,7 @@
   config = {
     urknall.appliers = lib.mkMerge (lib.mapAttrsToList (name: server: 
       let
-        machine = import "${server.nixpkgs}/nixos/lib/eval-config.nix" {
-          inherit (server) system;
-          specialArgs = {
-            inherit lib stage;
-            stages = stages // { 
-              "${stage}" = {
-                inherit config;
-              };
-            };
-          };
-          modules = [
-            ({
-              imports = [
-                server.configuration
-              ];
-            })
-          ];
-        };
+        toplevel = server.config.config.system.build.toplevel;
 
         fakeSSH = localPkgs.writeShellScriptBin "ssh" ''
           exec ${localPkgs.openssh}/bin/ssh \
@@ -131,21 +121,21 @@
             copy \
             ${lib.optionalString (server.noCheckSigs) "--no-check-sigs"} \
             ${lib.optionalString (server.substituteOnDestination) "--substitute-on-destination"} \
-            --to ${if server.substituteOnDestination then "ssh" else "ssh-ng"}://${server.user}@${server.ip} ${machine.config.system.build.toplevel}
+            --to ${if server.substituteOnDestination then "ssh" else "ssh-ng"}://${server.user}@${server.ip} ${toplevel}
 
           ssh \
             ${lib.optionalString (!server.checkHostKeys) "-oUserKnownHostsFile=/dev/null -oStrictHostKeyChecking=no"} \
             ${server.user}@${server.ip} \
             -- \
             ${lib.optionalString (server.useRemoteSudo) "sudo"} \
-            nix --experimental-features "nix-command" profile install --profile /nix/var/nix/profiles/${server.profile} ${machine.config.system.build.toplevel}
+            nix --experimental-features "nix-command" profile install --profile /nix/var/nix/profiles/${server.profile} ${toplevel}
 
           ssh \
             ${lib.optionalString (!server.checkHostKeys) "-oUserKnownHostsFile=/dev/null -oStrictHostKeyChecking=no"} \
             ${server.user}@${server.ip} \
             -- \
             ${lib.optionalString (server.useRemoteSudo) "sudo"} \
-            ${machine.config.system.build.toplevel}/bin/switch-to-configuration ${server.applyMode}
+            ${toplevel}/bin/switch-to-configuration ${server.applyMode}
         )
       ''
     ) config.deployments.nix-v3);
