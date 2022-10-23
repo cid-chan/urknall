@@ -7,6 +7,11 @@
 # These can be used for secret provisioning and server customization
 writeShellScript "place-files" ''
   IPADDR="$1"
+  ESC_IPADDR="$IPADDR"
+  if [[ "$IPADDR" == *:* ]]; then
+    ESC_IPADDR="[$IPADDR]"
+  fi
+
   export SSH_KEY="$(realpath "$2")"
   export PATH=${(callPackage ./../../ssh.nix {}).path}:$PATH
 
@@ -31,7 +36,7 @@ writeShellScript "place-files" ''
     else
       ''
         ssh root@$IPADDR -- mkdir -p $(dirname ${dst})
-        scp ${src} root@$IPADDR:${dst}
+        scp ${src} root@$ESC_IPADDR:${dst}
         ssh root@$IPADDR -- chown ${f.user}:${f.group} ${dst}
         ssh root@$IPADDR -- chmod ${f.mode} ${dst}
       ''

@@ -15,6 +15,11 @@ let
 in
 writeShellScript "provision" ''
   IPADDR="$1"
+  ESC_IPADDR="$IPADDR"
+  if [[ "$IPADDR" == *:* ]]; then
+    ESC_IPADDR="[$IPADDR]"
+  fi
+
   export SSH_KEY="$(realpath "$2")"
   export PATH=${(callPackage ./../../ssh.nix {}).path}:$PATH
 
@@ -24,7 +29,7 @@ writeShellScript "provision" ''
     shift
     shift
 
-    scp $name root@$IPADDR:/root/$localname
+    scp $name root@$ESC_IPADDR:/root/$localname
     ssh root@$IPADDR -- chmod +x /root/$localname
     ssh root@$IPADDR -- /root/$localname "$@"
   }

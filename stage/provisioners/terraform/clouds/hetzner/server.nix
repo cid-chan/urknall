@@ -10,6 +10,11 @@ let
     in
     ''
       IPADDR="$1"
+      ESC_IPADDR="$IPADDR"
+      if [[ "$IPADDR" == *:* ]]; then
+        ESC_IPADDR="[$IPADDR]"
+      fi
+
       if [[ ! -z "$2" ]]; then 
         export SSH_KEY="$(realpath "$2")"
       fi
@@ -24,6 +29,22 @@ let
         ${ssh.fakeSCP.text}
       }
     '';
+
+  deployIP = module:
+    if module.ipv4 != false then
+      lib.urknall.variable "hcloud_server.${module.name}.ipv4_address"
+    else if module.ipv6 != false then
+      lib.urknall.variable "replace(hcloud_server.${module.name}.ipv6_address, \"::1\", \"::2\")"
+    else
+      throw "Cannot provision on privately networked servers.";
+
+  serverIP = module:
+    if module.ipv4 != false then
+      lib.urknall.variable "hcloud_server.${module.name}.ipv4_address"
+    else if module.ipv6 != false then
+      lib.urknall.variable "hcloud_server.${module.name}.ipv6_address"
+    else
+      throw "Cannot provision on privately networked servers.";
 
   generateFileRenameMap = module:
     let
@@ -282,7 +303,7 @@ in
                   in 
                   ''
                   rssh root@$IPADDR -- mkdir -p $(dirname ${path})
-                  rscp ${renames.${path}.renamed} root@$IPADDR:${path}
+                  rscp ${renames.${path}.renamed} root@$ESC_IPADDR:${path}
                   rssh root@$IPADDR -- chown ${file.user}:${file.group} ${path}
                   rssh root@$IPADDR -- chmod ${file.mode} ${path}
                   ''
@@ -400,7 +421,7 @@ in
             ${lib.optionalString ((builtins.length module.volumes) > 0) ''
               provisioner "local-exec" {
                 when = create
-                command = "VOLUMES='${builtins.concatStringsSep " " (map (volume: "${volume}=${lib.urknall.variable "hcloud_volume.${volume}.id"}") module.volumes)}' ${assets.hcloud_server_name_volumes.path} ${lib.urknall.variable "hcloud_server.${module.name}.ipv4_address"}"
+                command = "VOLUMES='${builtins.concatStringsSep " " (map (volume: "${volume}=${lib.urknall.variable "hcloud_volume.${volume}.id"}") module.volumes)}' ${assets.hcloud_server_name_volumes.path} ${deployIP module}"
               }
             ''}
 
@@ -418,7 +439,7 @@ in
                 })} $IPADDR";
 
                 rebootAfterInstall = true;
-              }} ${lib.urknall.variable "hcloud_server.${module.name}.ipv4_address"}"
+              }} ${deployIP module}"
             }
 
             provisioner "local-exec" {
