@@ -67,7 +67,7 @@ in
         options = {
           name = mkOption {
             type = str;
-            default = builtins.replaceStrings ["-"] ["_"] config._module.args.name;
+            default = config._module.args.name;
             description = ''
               The name of the server.
             '';
@@ -76,7 +76,7 @@ in
           id = mkOption {
             type = str;
             readOnly = true;
-            default = "hcloud_server.${config.name}";
+            default = "hcloud_server.${builtins.replaceStrings ["-"] ["_"] config._module.args.name}";
             description = ''
               ID in the terraform config
             '';
