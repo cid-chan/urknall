@@ -72,6 +72,7 @@ let
 in
 {
   imports = [
+    ./cloudflare
     ./backends
     ./clouds
   ];
