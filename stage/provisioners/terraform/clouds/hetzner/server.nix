@@ -139,7 +139,8 @@ in
           };
 
           files = mkOption {
-            type = nullOr (attrsOf (submodule (import ./../../../../_utils/strategies/files/submodule.nix)));
+            type = attrsOf (submodule (import ./../../../../_utils/strategies/files/submodule.nix));
+            default = {};
             description = ''
               Additional files to copy to the target
             '';
@@ -441,26 +442,22 @@ in
                 rebootAfterInstall = true;
               }} ${deployIP module}"
             }
+          ''}
+        '' else ''
+          ${lib.optionalString ((module.files != {}) && (module.system == null)) (
+            ''
+            provisioner "local-exec" {
+              when = create
+              command = "${assets."hcloud_server_files_${module.name}_upload".path} ${serverIP module}"
+            }
 
             provisioner "local-exec" {
               when = create
-              command = "${assets.hcloud_server_wait_for_installed.path} ${lib.urknall.variable "hcloud_server.${module.name}.ipv4_address"}"
+              command = "ssh -oUserKnownHostsFile=/dev/null -oStrictHostKeyChecking=no root@${serverIP module} -- reboot"
             }
-          ''}
-        '' else ''
-          provisioner "local-exec" {
-            when = create
-            command = "${assets.hcloud_server_wait_for_installed.path} ${lib.urknall.variable "hcloud_server.${module.name}.ipv4_address"}"
-          }
+          '')}
         ''}
 
-        ${lib.optionalString ((module.files != {}) && (module.system == null)) (
-          ''
-          provisioner "local-exec" {
-            when = create
-            command = "${assets."hcloud_server_files_${module.name}_upload".path} ${lib.urknall.variable "self.ipv4_address"} ${lib.optionalString (module.privateKey != null) assets."hcloud_server_pk_${module.name}".path}"
-          }
-        '')}
       }
 
       resource "hcloud_server" "${module.name}" {
