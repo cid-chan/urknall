@@ -128,7 +128,7 @@
             ${server.user}@${server.ip} \
             -- \
             ${lib.optionalString (server.useRemoteSudo) "sudo"} \
-            nix --experimental-features "nix-command" profile install --profile /nix/var/nix/profiles/${server.profile} ${toplevel}
+            nix --experimental-features "nix-command" profile upgrade --profile /nix/var/nix/profiles/${server.profile} ${toplevel}
 
           ssh \
             ${lib.optionalString (!server.checkHostKeys) "-oUserKnownHostsFile=/dev/null -oStrictHostKeyChecking=no"} \
