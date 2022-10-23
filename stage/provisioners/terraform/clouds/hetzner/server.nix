@@ -262,7 +262,7 @@ in
     };
   };
 
-  config = {
+  config = lib.mkIf (cfg.enable) {
     provisioners.terraform.project.assets = lib.mkMerge [
       (lib.mkIf (cfg.servers != {}) {
         hcloud_server_name_volumes = {

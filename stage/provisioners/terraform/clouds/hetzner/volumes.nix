@@ -61,7 +61,7 @@ in
     };
   };
 
-  config = {
+  config = lib.mkIf (cfg.enable) {
     provisioners.terraform.project.module = lib.mkMerge (lib.mapAttrsToList (_: volume: ''
       resource "hcloud_volume" "${volume.name}" {
         size = ${toString volume.size}

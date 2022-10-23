@@ -44,7 +44,7 @@ in
     };
   };
 
-  config = {
+  config = lib.mkIf (cfg.enable) {
     provisioners.terraform.project.module = lib.mkMerge (lib.mapAttrsToList (_: module: ''
       resource "hcloud_ssh_key" "${module.name}" {
         name = "${module.name}"

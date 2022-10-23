@@ -55,7 +55,7 @@ in
     };
   };
 
-  config = {
+  config = lib.mkIf (cfg.enable) {
     provisioners.terraform.project.module = lib.mkMerge (lib.mapAttrsToList (_: network: ''
       resource "hcloud_network" "${network.name}" {
         name = "${network.name}"
