@@ -516,6 +516,7 @@ in
           ''}
         '' else ''
           image = ${toString module.snapshot}
+          rescue = "linux64"
         ''}
 
         ${module.extraConfig}
