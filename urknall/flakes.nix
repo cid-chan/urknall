@@ -12,7 +12,7 @@ in
   urknall = instance.urknall;
   modules = [ instance.modules ];
   runner = instance.runner;
-  resolve = instance.urknall.config.stages.${stage}.urknall.build.resolve;
-  apply = instance.urknall.config.stages.${stage}.urknall.build.apply;
-  destroy = instance.urknall.config.stages.${stage}.urknall.build.destroy;
+  resolve = instance.stages.${stage}.config.stages.${stage}.urknall.build.resolve;
+  apply = instance.stages.${stage}.config.stages.${stage}.urknall.build.apply;
+  destroy = instance.stages.${stage}.config.stages.${stage}.urknall.build.destroy;
 }

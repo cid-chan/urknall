@@ -128,10 +128,7 @@
           inherit modules;
           urknall = instance;
           runner = instance.config.urknall.build.run; 
-          stages = nixpkgs.lib.mapAttrs (_: stage: {
-            apply = stageFiles: (urknall { inherit system stageFiles; stage = stage.name; }).urknall.build.apply;
-            destroy = stageFiles: (urknall { inherit system stageFiles; stage = stage.name; }).urknall.build.destroy;
-          }) instance.config.urknall.stageList;
+          stages = nixpkgs.lib.mapAttrs (stage: _: urknall { inherit system stage; }) instance.config.stages;
         };
     }) [ "x86_64-linux" ]));
 }
