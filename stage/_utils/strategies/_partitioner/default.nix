@@ -151,9 +151,7 @@ in
 
           firstPart = builtins.head partitions;
 
-          table = 
-            (builtins.length partitions == 1)
-            -> firstPart.size != null;
+          table = (builtins.length partitions > 1) || firstPart.size != null;
 
           checkScript =
             if firstPart.reformat then
