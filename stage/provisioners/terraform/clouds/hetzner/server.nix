@@ -32,17 +32,17 @@ let
 
   deployIP = module:
     if module.ipv4 != false then
-      lib.urknall.variable "hcloud_server.${module.name}.ipv4_address"
+      lib.urknall.variable "hcloud_server.${module._identifier}.ipv4_address"
     else if module.ipv6 != false then
-      lib.urknall.variable "replace(hcloud_server.${module.name}.ipv6_address, \"::1\", \"::2\")"
+      lib.urknall.variable "replace(hcloud_server.${module._identifier}.ipv6_address, \"::1\", \"::2\")"
     else
       throw "Cannot provision on privately networked servers.";
 
   serverIP = module:
     if module.ipv4 != false then
-      lib.urknall.variable "hcloud_server.${module.name}.ipv4_address"
+      lib.urknall.variable "hcloud_server.${module._identifier}.ipv4_address"
     else if module.ipv6 != false then
-      lib.urknall.variable "hcloud_server.${module.name}.ipv6_address"
+      lib.urknall.variable "hcloud_server.${module._identifier}.ipv6_address"
     else
       throw "Cannot provision on privately networked servers.";
 
@@ -73,10 +73,17 @@ in
             '';
           };
 
+          _identifier = mkOption {
+            type = str;
+            internal = true;
+            readOnly = true;
+            default = "${builtins.replaceStrings ["-"] ["_"] config._module.args.name}";
+          };
+
           id = mkOption {
             type = str;
             readOnly = true;
-            default = "hcloud_server.${builtins.replaceStrings ["-"] ["_"] config._module.args.name}";
+            default = "hcloud_server.${config._identifier}";
             description = ''
               ID in the terraform config
             '';
@@ -241,7 +248,7 @@ in
           addresses = {
             ipv4 = mkOption {
               type = str;
-              default = outputs."hcloud_server_${config.name}_ipv4_address".future;
+              default = outputs."hcloud_server_${config._identifier}_ipv4_address".future;
               readOnly = true;
               description = ''
                 The resolved public IPv4 of the server.
@@ -250,7 +257,7 @@ in
             ipv6 = mkOption {
               type = str;
               readOnly = true;
-              default = outputs."hcloud_server_${config.name}_ipv4_address".future;
+              default = outputs."hcloud_server_${config._identifier}_ipv6_address".future;
               description = ''
                 The resolved public IPv6 of the server.
               '';
@@ -273,12 +280,12 @@ in
 
       (lib.mkMerge (map (server: lib.mkMerge [
         ({
-          "hcloud_server_pk_${server.name}" = lib.mkIf (server.privateKey != null) {
+          "hcloud_server_pk_${server._identifier}" = lib.mkIf (server.privateKey != null) {
             file = server.privateKey;
             chmod = "0600";
           };
 
-          "hcloud_server_${server.name}_primary_ip_workaround" = lib.mkIf (server.ipv4 != false && server.ipv6 != false) {
+          "hcloud_server_${server._identifier}_primary_ip_workaround" = lib.mkIf (server.ipv4 != false && server.ipv6 != false) {
             file = toString (localPkgs.writeText "primary-ip-workaround" ''
               #!/usr/bin/env bash
               sleep 5
@@ -289,7 +296,7 @@ in
         })
 
         (lib.mkIf (server.files != {}) {
-          "hcloud_server_files_${server.name}_upload" = {
+          "hcloud_server_files_${server._identifier}_upload" = {
             file = 
               let
                 paths = builtins.attrNames server.files;
@@ -329,8 +336,8 @@ in
 
     provisioners.terraform.project.module = lib.mkMerge (lib.mapAttrsToList (_: module: ''
       ${lib.optionalString (module.ipv4 == true) ''
-        resource "hcloud_primary_ip" "${module.name}_ipv4" {
-            name = "${module.name}-ipv4"
+        resource "hcloud_primary_ip" "${module._identifier}_ipv4" {
+            name = "${module._identifier}-ipv4"
             type = "ipv4"
             assignee_type = "server"
             datacenter = "${module.datacenter}"
@@ -339,8 +346,8 @@ in
       ''}
 
       ${lib.optionalString (module.ipv6 == true) ''
-        resource "hcloud_primary_ip" "${module.name}_ipv6" {
-            name = "${module.name}-ipv6"
+        resource "hcloud_primary_ip" "${module._identifier}_ipv6" {
+            name = "${module._identifier}-ipv6"
             type = "ipv6"
             datacenter = "${module.datacenter}"
             assignee_type = "server"
@@ -350,32 +357,32 @@ in
 
       ${lib.optionalString (module.rdns != null) ''
         ${lib.optionalString (module.ipv4 != false) ''
-          resource "hcloud_rdns" "${module.name}_rdns_ipv4" {
-              server_id = hcloud_server.${module.name}.id
-              ip_address = hcloud_server.${module.name}.ipv4_address
+          resource "hcloud_rdns" "${module._identifier}_rdns_ipv4" {
+              server_id = hcloud_server.${module._identifier}.id
+              ip_address = hcloud_server.${module._identifier}.ipv4_address
               dns_ptr = "${module.rdns}"
           }
         ''}
 
         ${lib.optionalString (module.ipv6 != false) ''
-          resource "hcloud_rdns" "${module.name}_rdns_ipv6" {
-              server_id = hcloud_server.${module.name}.id
-              ip_address = hcloud_server.${module.name}.ipv6_address
+          resource "hcloud_rdns" "${module._identifier}_rdns_ipv6" {
+              server_id = hcloud_server.${module._identifier}.id
+              ip_address = hcloud_server.${module._identifier}.ipv6_address
               dns_ptr = "${module.rdns}"
           }
         ''}
       ''}
 
       ${builtins.concatStringsSep "\n" (map (network: ''
-        resource "hcloud_server_network" "${module.name}_${network.network}" {
-          server_id = hcloud_server.${module.name}.id
+        resource "hcloud_server_network" "${module._identifier}_${network.network}" {
+          server_id = hcloud_server.${module._identifier}.id
           network_id = hcloud_network.${network.network}.id
           ${lib.optionalString (network.ip != null) "ip = \"${network.ip}\""}
         }
 
         ${lib.optionalString (network.ip != null) ''
           ${builtins.concatStringsSep "\n" (map (route: ''
-            resource "hcloud_network_route" "${network.network}_${module.name}_${builtins.replaceStrings ["." "/"] ["_" "_"] route}" {
+            resource "hcloud_network_route" "${network.network}_${module._identifier}_${builtins.replaceStrings ["." "/"] ["_" "_"] route}" {
               network_id = hcloud_network.${network.network}.id
               destination = "${route}"
               gateway = "${network.ip}"
@@ -385,32 +392,32 @@ in
       '') (builtins.attrValues module.networks))}
 
       ${lib.optionalString (module.ipv4 != false && module.ipv6 != false) ''
-        resource "null_resource" "hcloud_server_${module.name}_primary_ip_workaround_bind_late" {
+        resource "null_resource" "hcloud_server_${module._identifier}_primary_ip_workaround_bind_late" {
           triggers = {
             always_run = timestamp()
           }
         }
 
-        data "external" "hcloud_server_${module.name}_primary_ip_workaround" {
+        data "external" "hcloud_server_${module._identifier}_primary_ip_workaround" {
           depends_on = [
-            null_resource.hcloud_server_${module.name}_primary_ip_workaround_bind_late
+            null_resource.hcloud_server_${module._identifier}_primary_ip_workaround_bind_late
           ]
 
-          program = [ "sh", "-c", "${assets."hcloud_server_${module.name}_primary_ip_workaround".path}" ]
+          program = [ "sh", "-c", "${assets."hcloud_server_${module._identifier}_primary_ip_workaround".path}" ]
         }
       ''}
 
       ${builtins.concatStringsSep "\n" (map (volume: ''
-        resource "hcloud_volume_attachment" "${module.name}_${volume}" {
+        resource "hcloud_volume_attachment" "${module._identifier}_${volume}" {
           volume_id = hcloud_volume.${volume}.id
-          server_id = hcloud_server.${module.name}.id
+          server_id = hcloud_server.${module._identifier}.id
           automount = false
         }
       '') module.volumes)}
 
-      resource "null_resource" "hcloud_server_${module.name}_provision" {
+      resource "null_resource" "hcloud_server_${module._identifier}_provision" {
         triggers = {
-          server_id = "${lib.urknall.variable "hcloud_server.${module.name}.id"}"
+          server_id = "${lib.urknall.variable "hcloud_server.${module._identifier}.id"}"
         }
 
         ${if module.snapshot == null then ''
@@ -444,7 +451,7 @@ in
             ''
             provisioner "local-exec" {
               when = create
-              command = "${assets."hcloud_server_files_${module.name}_upload".path} ${serverIP module}"
+              command = "${assets."hcloud_server_files_${module._identifier}_upload".path} ${serverIP module}"
             }
 
             provisioner "local-exec" {
@@ -456,7 +463,7 @@ in
 
       }
 
-      resource "hcloud_server" "${module.name}" {
+      resource "hcloud_server" "${module._identifier}" {
         name = "${module.name}"
         datacenter = "${module.datacenter}"
         server_type = "${module.type}"
@@ -481,7 +488,7 @@ in
             ${if (module.ipv4 != true) then ''
                 ipv4 = ${module.ipv4}.id
             '' else ''
-                ipv4 = hcloud_primary_ip.${module.name}_ipv4.id
+                ipv4 = hcloud_primary_ip.${module._identifier}_ipv4.id
             ''}
           ''}
           ${lib.optionalString (module.ipv6 != false) ''
@@ -489,14 +496,14 @@ in
             ${if (module.ipv6 != true) then ''
                 ipv6 = ${module.ipv6}.id
             '' else ''
-                ipv6 = hcloud_primary_ip.${module.name}_ipv6.id
+                ipv6 = hcloud_primary_ip.${module._identifier}_ipv6.id
             ''}
           ''}
         }
 
         labels = {
           ${lib.optionalString (module.ipv4 != false && module.ipv6 != false) ''
-            "urknall.dev/primary-ip-workaround" : data.external.hcloud_server_${module.name}_primary_ip_workaround.result.text,
+            "urknall.dev/primary-ip-workaround" : data.external.hcloud_server_${module._identifier}_primary_ip_workaround.result.text,
           ''}
           "urknall.dev/stage" : "${stage}",
           "urknall.dev/name" : "${module.name}"${lib.optionalString (module.labels != {}) ","}
@@ -520,11 +527,11 @@ in
     '') cfg.servers);
 
     provisioners.terraform.project.outputs = lib.mkMerge (lib.mapAttrsToList (_: module: {
-      "hcloud_server_${module.name}_ipv4_address" = {
+      "hcloud_server_${module._identifier}_ipv4_address" = {
         value = "${module.id}.ipv4_address";
       };
 
-      "hcloud_server_${module.name}_ipv6_address" = {
+      "hcloud_server_${module._identifier}_ipv6_address" = {
         value = "${module.id}.ipv6_address";
       };
     }) cfg.servers);
