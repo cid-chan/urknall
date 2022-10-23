@@ -205,7 +205,7 @@ in
                 '';
               };
             }; }));
-            default = [];
+            default = {};
             description = ''
               A set of up to three private networks.
             '';
