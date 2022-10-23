@@ -20,6 +20,7 @@ fi
 OPERATION=$1
 TARGET="$2"
 shift
+shift
 
 # Load the runner
 # Rewrites for legacy.
@@ -37,7 +38,6 @@ else
   if [[ "$TARGET" != *#* ]]; then
     TARGET="${TARGET}#urknall.default"
   fi
-  shift
 
   export CURRENT_SYSTEM=$(nix-instantiate --eval --json -E "builtins.currentSystem")
   export URKNALL_FLAKE_PATH=$(echo "$TARGET" | cut -d'#' -f1)
