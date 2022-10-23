@@ -24,6 +24,7 @@
               rawScript = (builtins.readFile ./urknall/runner.sh);
               replacements = {
                 urknall_nix = toString ./urknall/urknall.nix;
+                flakes_nix = toString ./urknall/flakes.nix;
               };
 
               names = builtins.attrNames replacements;

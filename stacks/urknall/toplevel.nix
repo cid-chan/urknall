@@ -44,7 +44,7 @@ let
       stage = stage.name;
       operation = "resolve";
       stageFileVar = "stage_files";
-    }}) | jq -s 'add | { "${stage.name}": . }' > $RESOLVE_DIR/${stage.name}.json
+    }} "$@") | jq -s 'add | { "${stage.name}": . }' > $RESOLVE_DIR/${stage.name}.json
 
     if [[ -z "$stage_files" ]]; then
       stage_files="$RESOLVE_DIR/${stage.name}.json"
@@ -64,7 +64,7 @@ let
       stage = stage.name;
       operation = "apply";
       stageFileVar = "stage_files";
-    }} --show-trace)
+    }} "$@")
     popd
   '';
 
@@ -78,7 +78,7 @@ let
       stage = stage.name;
       operation = "destroy";
       stageFileVar = "stage_files";
-    }})
+    }} "$@")
     popd
   '';
 in

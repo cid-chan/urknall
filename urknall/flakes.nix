@@ -1,18 +1,18 @@
 # Use system pkgs instead the one used by the flake.
 { path, attr, stage ? "!urknall", stageFiles ? null }:
 let
-  urknall = builtins.getFlake ./..;
+  urknall = builtins.getFlake "path:${toString ./..}";
 
   flake = builtins.getFlake path;
   raw = urknall.lib.tryAttrs ["urknall.${attr}" attr] flake.outputs;
 
-  urknall = raw.${builtins.currentSystem};
+  instance = raw.${builtins.currentSystem};
 in
 {
-  urknall = urknall.instance;
-  modules = [ urknall.modules ];
-  runner = urknall.runner;
-  resolve = urknall.stages.resolve stageFiles;
-  apply = urknall.stages.apply stageFiles;
-  destroy = urknall.stages.destroy stageFiles;
+  urknall = instance.urknall;
+  modules = [ instance.modules ];
+  runner = instance.runner;
+  resolve = instance.urknall.config.stages.${stage}.urknall.build.resolve;
+  apply = instance.urknall.config.stages.${stage}.urknall.build.apply;
+  destroy = instance.urknall.config.stages.${stage}.urknall.build.destroy;
 }

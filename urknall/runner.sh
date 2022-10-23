@@ -37,11 +37,13 @@ else
   if [[ "$TARGET" != *#* ]]; then
     TARGET="${TARGET}#urknall.default"
   fi
-  export CURRENT_SYSTEM=$(nix-instantiate --eval --json -E "builtins.currentSystem")
-  export URKNALL_FLAKE_PATH=$($(echo "$TARGET" | cut -d'#' -f1))
+  shift
 
+  export CURRENT_SYSTEM=$(nix-instantiate --eval --json -E "builtins.currentSystem")
+  export URKNALL_FLAKE_PATH=$(echo "$TARGET" | cut -d'#' -f1)
   export URKNALL_FLAKE_ATTR=$(echo "$TARGET" | cut -d'#' -f2)
-  RUNNER=$(nix build ${TARGET}.${CURRENT_SYSTEM}.runner)
+
+  RUNNER=$(nix-build --no-out-link @flakes_nix@ --argstr path "$URKNALL_FLAKE_PATH" --argstr attr "$URKNALL_FLAKE_ATTR" -A runner "$@")
 fi
 
 # Prepare the urknall environment
@@ -53,5 +55,5 @@ $RUNNER $OPERATION "$@"
 
 # Preserve Exit-Code and clean up.
 EXITCODE=$?
-rm -rf $ROOT_DIR
+rm -rf $URKNALL_ROOT_DIR
 exit $EXITCODE

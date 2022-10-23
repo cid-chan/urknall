@@ -1,19 +1,14 @@
 { nixpkgs, flakes, ... }:
 {
-  getDataAttr = default: path:
-    if nixpkgs.lib.hasInfix "#" path then
-      builtins.head (builtins.tail (nixpkgs.lib.splitString "#" path))
-    else
-      default;
-
-  getFlakePath = path:
-    if nixpkgs.lib.hasInfix "#" path then
-      builtins.head (nixpkgs.lib.splitString "#" path)
-    else
-      path;
-
   followPath = attr: root:
-    builtins.foldl' (p: a: p.${a}) root (nixpkgs.lib.splitString "." attr);
+    builtins.foldl' ({ value, success }@current: a: 
+      if !success then
+        current
+      else if builtins.hasAttr a value then
+        { value = value.${a}; success = true; }
+      else
+        { value = null; success = false; }
+    ) { value = root; success = true; } (nixpkgs.lib.splitString "." attr);
 
   tryAttrs = attrs: root:
     let
@@ -22,7 +17,7 @@
           current
         else
           let
-            attempt = builtins.tryEval (flakes.followPath attr root);
+            attempt = flakes.followPath attr root;
           in
           if attempt.success then
             { inherit (attempt) value; }
