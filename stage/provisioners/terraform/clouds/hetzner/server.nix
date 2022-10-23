@@ -265,10 +265,6 @@ in
   config = {
     provisioners.terraform.project.assets = lib.mkMerge [
       (lib.mkIf (cfg.servers != {}) {
-        hcloud_server_wait_for_installed = {
-          file = toString ./wait_for_nixos.sh;
-          chmod = "755";
-        };
         hcloud_server_name_volumes = {
           file = toString ./mount_volumes.sh;
           chmod = "755";
