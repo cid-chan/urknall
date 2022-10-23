@@ -151,6 +151,44 @@ in
             '';
           };
 
+          networks = mkOption {
+            type = attrsOf (submodule ({ config, ... }: { options = {
+              network = mkOption {
+                type = str;
+                description = ''
+                  The name of the network
+                '';
+              };
+              subnet = mkOption {
+                type = str;
+                default = config._module.args.name;
+                description = ''
+                  The subnet to attach to.
+                '';
+              };
+
+              ip = mkOption {
+                type = nullOr str;
+                default = null;
+                description = ''
+                  A static IP to assign to the server.
+                '';
+              };
+
+              routes = mkOption {
+                type = listOf str;
+                default = [];
+                description = ''
+                  A route to announce to the whole private network.
+                '';
+              };
+            }; }));
+            default = [];
+            description = ''
+              A set of up to three private networks.
+            '';
+          };
+
           ipv4 = mkOption {
             type = oneOf [ str bool ];
             default = true;
@@ -309,6 +347,24 @@ in
           }
         ''}
       ''}
+
+      ${builtins.concatStringsSep "\n" (map (network: ''
+        resource "hcloud_server_network" "${module.name}_${network.network}" {
+          server_id = hcloud_server.${module.name}.id
+          network_id = hcloud_network.${network.network}.id
+          ${lib.optionalString (network.ip != null) "ip = \"${network.ip}\""}
+        }
+
+        ${lib.optionalString (network.ip != null) ''
+          ${builtins.concatStringsSep "\n" (map (route: ''
+            resource "hcloud_network_route" "${network.network}_${module.name}_${builtins.replaceStrings ["." "/"] ["_" "_"] route}" {
+              network_id = hcloud_network.${network.network}.id
+              destination = "${route}"
+              gateway = "${network.ip}"
+            }
+          '') network.routes)}
+        ''}
+      '') (builtins.attrValues module.networks))}
 
       ${lib.optionalString (module.ipv4 != false && module.ipv6 != false) ''
         resource "null_resource" "hcloud_server_${module.name}_primary_ip_workaround_bind_late" {

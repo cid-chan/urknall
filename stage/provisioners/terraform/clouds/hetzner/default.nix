@@ -7,6 +7,7 @@ in
     ./ssh-keys.nix
     ./server.nix
     ./volumes.nix
+    ./network.nix
   ];
 
   options = let inherit (lib) mkOption mkEnableOption; inherit (lib.types) nullOr str int lines; in {
