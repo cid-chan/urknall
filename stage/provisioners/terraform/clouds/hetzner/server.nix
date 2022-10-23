@@ -67,7 +67,7 @@ in
         options = {
           name = mkOption {
             type = str;
-            default = config._module.args.name;
+            default = builtins.replaceStrings ["-"] ["_"] config._module.args.name;
             description = ''
               The name of the server.
             '';
