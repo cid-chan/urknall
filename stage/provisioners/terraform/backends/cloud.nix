@@ -48,7 +48,7 @@ in
   };
 
   config = lib.mkIf (config.provisioners.terraform.backend.type == "cloud") {
-    provisioners.terraform.project.setup = ''
+    provisioners.terraform.project.setup = lib.mkIf (cfg.backend.cloud.tokenCommand != null) ''
       export TF_TOKEN_${builtins.replaceStrings ["."] ["_"] cfg.backend.cloud.host}="$(${cfg.backend.cloud.tokenCommand})"
     '';
 
@@ -57,7 +57,7 @@ in
         organization = "${cfg.backend.cloud.organization}"
         host = "${cfg.backend.cloud.host}"
         workspaces {
-          ${lib.optionalString (cfg.backend.cloud.name != null) "name = \"${cfg.backend.cloud.name}\""}
+          ${lib.optionalString (cfg.backend.cloud.workspace != null) "workspace = \"${cfg.backend.cloud.workspace}\""}
           ${lib.optionalString (cfg.backend.cloud.tags != []) "tags = [${builtins.concatStringsSep ", " (map (v: "\"${v}\"") cfg.backend.cloud.tags)}]" 
         }
       }
