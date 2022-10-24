@@ -4,16 +4,18 @@ let
 in
 {
   imports = [
-    # ./cloud.nix
+    ./cloud.nix
     ./local.nix
   ];
   options = let inherit (lib) mkOption; inherit (lib.types) enum lines attrsOf submodule str; in {
     provisioners.terraform.backend = {
       type = mkOption {
-        type = enum [ "local" ];
+        type = enum [ "local" "cloud" ];
         default = "local";
         description = ''
           What backend should pulumi use?
+
+          When using cloud, make sure the Execution Mode is set to "Local".
         '';
       };
 
