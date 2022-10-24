@@ -58,7 +58,7 @@ in
         host = "${cfg.backend.cloud.host}"
         workspaces {
           ${lib.optionalString (cfg.backend.cloud.workspace != null) "workspace = \"${cfg.backend.cloud.workspace}\""}
-          ${lib.optionalString (cfg.backend.cloud.tags != []) "tags = [${builtins.concatStringsSep ", " (map (v: "\"${v}\"") cfg.backend.cloud.tags)}]" 
+          ${lib.optionalString (cfg.backend.cloud.tags != []) "tags = [${builtins.concatStringsSep ", " (map (v: "\"${v}\"") cfg.backend.cloud.tags)}]"}
         }
       }
     '';
