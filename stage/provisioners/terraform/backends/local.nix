@@ -27,5 +27,6 @@ in
       }
     '';
     provisioners.terraform.project.arguments = "-state $(echo ${cfg.backend.local.statePath})";
+    provisioners.terraform.project.initArguments = "-reconfigure";
   };
 }

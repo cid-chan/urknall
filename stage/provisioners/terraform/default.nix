@@ -67,7 +67,7 @@ let
       chmod ${v.chmod} assets/${v.name}
     '') cfg.project.assets)}
 
-    ${localPkgs.terraform}/bin/terraform init -reconfigure ${lib.optionalString noOutput ">/dev/null 2>/dev/null"}
+    ${localPkgs.terraform}/bin/terraform ${cfg.initArguments} ${lib.optionalString noOutput ">/dev/null 2>/dev/null"}
   '';
 in
 {
@@ -213,6 +213,14 @@ in
           default = "";
           description = ''
             Parameters to append to terraform.
+          '';
+        };
+
+        initArguments = mkOption {
+          type = separatedString " ";
+          default = "";
+          description = ''
+            Parameters to append to terraform init.
           '';
         };
       };
