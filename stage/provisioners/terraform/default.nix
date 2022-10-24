@@ -243,6 +243,7 @@ in
 
     urknall.resolvers = ''
       ${setupCommands true}
+      ${localPkgs.terraform}/bin/terraform output ${cfg.project.arguments} -json >&2
       ${localPkgs.terraform}/bin/terraform output ${cfg.project.arguments} -json | ${localPkgs.jq}/bin/jq 'map_values(.value) | with_entries(.key = "tf_output_\(.key)")'
     '';
   };
