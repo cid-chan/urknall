@@ -7,12 +7,13 @@ let
   raw = urknall.lib.tryAttrs ["urknall.${attr}" attr] flake.outputs;
 
   instance = raw.${builtins.currentSystem};
+  resolved = instance.withFutures stageFiles;
 in
 {
   urknall = instance.urknall;
   modules = [ instance.modules ];
   runner = instance.runner;
-  resolve = instance.stages.${stage}.config.stages.${stage}.urknall.build.resolve;
-  apply = instance.stages.${stage}.config.stages.${stage}.urknall.build.apply;
-  destroy = instance.stages.${stage}.config.stages.${stage}.urknall.build.destroy;
+  resolve = resolved.${stage}.config.stages.${stage}.urknall.build.resolve;
+  apply = resolved.${stage}.config.stages.${stage}.urknall.build.apply;
+  destroy = resolved.${stage}.config.stages.${stage}.urknall.build.destroy;
 }

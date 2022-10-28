@@ -129,6 +129,10 @@
           urknall = instance;
           runner = instance.config.urknall.build.run; 
           stages = nixpkgs.lib.mapAttrs (stage: _: urknall { inherit system stage; }) instance.config.stages;
+          withFutures = stageFiles:
+            nixpkgs.lib.mapAttrs (stage: _: urknall {
+              inherit system stage stageFiles;
+            }) instance.config.stages;
         };
     }) [ "x86_64-linux" ]));
 }
