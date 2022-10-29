@@ -52,7 +52,7 @@ in
 
     (lib.mkIf (cfg.tokenCommand != null) {
       provisioners.terraform.project.setup = ''
-        export HCLOUD_TOKEN="$(cfg.tokenCommand)"
+        export HCLOUD_TOKEN="$(${cfg.tokenCommand})"
       '';
     })
   ]));
