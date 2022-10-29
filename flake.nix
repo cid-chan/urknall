@@ -19,7 +19,7 @@
             ];
           };
 
-          packages.urknall = pkgs.writeScriptBin "urknall" (
+          packages.urknall = pkgs.writeShellScriptBin "urknall" (
             let
               rawScript = (builtins.readFile ./urknall/runner.sh);
               replacements = {
