@@ -20,8 +20,6 @@ writeShellScript "place-files" ''
     sleep 1
   done
 
-  set -xueo pipefail
-
   ${builtins.concatStringsSep "\n" (map (f:
     let
       src = pathRewriter f.file;

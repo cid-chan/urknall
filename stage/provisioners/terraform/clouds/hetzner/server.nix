@@ -19,8 +19,6 @@ let
         export SSH_KEY="$(realpath "$2")"
       fi
 
-      set -xueo pipefail
-
       rssh() {
         ${ssh.fakeSSH.text}
       }
