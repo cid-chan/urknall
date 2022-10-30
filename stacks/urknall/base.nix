@@ -1,6 +1,23 @@
 { lib, config, ... }:
+let
+  CURRENT_VERSION = "0.1";
+in
 {
   options = let inherit (lib) mkOption; inherit (lib.types) listOf nullOr submodule bool package str; in {
+    urknall.stateVersion = mkOption {
+      type = nullOr str;
+      description = ''
+        The stateVersion defines when the project was first created.
+        You should set this value once,
+        namely at the start of the project.
+
+        If you update your urknall version,
+        it will then automatically add the neccessary upgrade code to each stage.
+        This minimizes recreating resources.
+      '';
+      default = null;
+    };
+
     urknall.build.assertions = mkOption {
       type = str;
       internal = true;
@@ -56,6 +73,18 @@
   };
 
   config = {
+    urknall.assertions = [
+      {
+        condition = config.urknall.stateVersion == null;
+        message = ''
+          You did not specify 'urknall.stateVersion'.
+          Please set it once, and if possible, never change it.
+
+          Example: 'urknall.stateVersion = "${CURRENT_VERSION}".'
+        '';
+      }
+    ];
+
     urknall.build.assertions =
       let
         messages = lib.urknall.formatAssertions config.urknall.assertions;

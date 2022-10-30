@@ -15,5 +15,6 @@
       ];
     };
   };
+  config.urknall.stateVersion = "0.1";
 }
 

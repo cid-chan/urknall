@@ -3,6 +3,7 @@ let
   dc = "fsn1-dc14";
 in
 {
+  config.urknall.stateVersion = "0.1";
   config.stages.terraform = {
     provisioners.terraform.enable = true;
     provisioners.terraform.backend.type = "local";
