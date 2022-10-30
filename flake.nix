@@ -34,8 +34,15 @@
               replacedScript = nixpkgs.lib.replaceStrings key values rawScript;
             in
             ''
-              NIX_BIN_PATH=$(dirname $(which nix))
-              export PATH=${nixpkgs.lib.makeBinPath [pkgs.bash pkgs.jq pkgs.git]}:$NIX_BIN_PATH
+              NIX_BIN_PATH=$(dirname $(realpath $(which nix)))
+              export URKNALL_ORIGINAL_PATH="$PATH"
+              export PATH=${nixpkgs.lib.makeBinPath [
+                pkgs.bash 
+                pkgs.jq 
+                pkgs.git 
+                pkgs.coreutils
+                pkgs.util-linux
+              ]}:$NIX_BIN_PATH
               ${replacedScript}
             ''
           );
