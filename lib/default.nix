@@ -12,6 +12,7 @@ let
     futures = ./futures.nix;
     syntax = ./syntax.nix;
     derivation = ./derivation.nix;
+    assertions = ./assertions.nix;
   };
 
   imported = mapAttrs (_: v: import v) targets;

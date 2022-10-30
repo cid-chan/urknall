@@ -4,5 +4,6 @@
     ./base.nix
     ./futures.nix
     ./toplevel.nix
+    ./assertions.nix
   ];
 }

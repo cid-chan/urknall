@@ -34,6 +34,16 @@ let
     '') (builtins.attrNames config.stages))}
   '';
 
+  stageHead = ''
+    # Assertions:
+    # Evaluating this will fail building when any assertion evaluates to true
+    # ${config.urknall.build.assertions}
+
+    # Warnings:
+    # Evaluating this will show a warning when any assertion evaluates to true
+    # ${config.urknall.build.warnings}
+  '';
+
   resolveStage = stage: ''
     ###
     # Stage: ${stage.name}
@@ -145,12 +155,14 @@ in
   config = {
     urknall.build.apply =
       localPkgs.writeShellScript "apply" ''
+        ${stageHead}
         ${scriptHead}
         ${builtins.concatStringsSep "\n" (map (stage: "${applyStage stage}\n${resolveStage stage}") config.urknall.stageList)}
       '';
 
     urknall.build.destroy =
       localPkgs.writeShellScript "destroy" ''
+        ${stageHead}
         ${scriptHead}
 
         ${builtins.concatStringsSep "\n" (map (resolveStage) config.urknall.stageList)}
@@ -159,6 +171,7 @@ in
 
     urknall.build.shell =
       localPkgs.writeShellScript "shell" ''
+        ${stageHead}
         ${scriptHead}
 
         URKNALL_SELECTED_STAGE="$1"
