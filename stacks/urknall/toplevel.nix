@@ -155,6 +155,8 @@ in
   config = {
     urknall.build.apply =
       localPkgs.writeShellScript "apply" ''
+        set -ueo pipefail
+
         ${stageHead}
         ${scriptHead}
         ${builtins.concatStringsSep "\n" (map (stage: "${applyStage stage}\n${resolveStage stage}") config.urknall.stageList)}
@@ -162,6 +164,8 @@ in
 
     urknall.build.destroy =
       localPkgs.writeShellScript "destroy" ''
+        set -ueo pipefail
+
         ${stageHead}
         ${scriptHead}
 
@@ -171,6 +175,8 @@ in
 
     urknall.build.shell =
       localPkgs.writeShellScript "shell" ''
+        set -ueo pipefail
+
         ${stageHead}
         ${scriptHead}
 
@@ -184,6 +190,8 @@ in
 
     urknall.build.run =
       localPkgs.writeShellScript "run" ''
+        set -ueo pipefail
+
         OPERATION=$1
         shift
 
