@@ -28,6 +28,9 @@ in
       };
 
       providers = mkOption {
+        description = ''
+          A set of terraform providers to include in the project.
+        '';
         default = {};
         type = attrsOf (submodule ({ config, ... }: {
           options = {

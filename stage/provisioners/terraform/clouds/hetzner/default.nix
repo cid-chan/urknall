@@ -32,6 +32,7 @@ in
 
       providerBlock = mkOption {
         type = lines;
+        internal = true;
         default = "";
       };
     };

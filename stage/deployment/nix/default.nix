@@ -2,6 +2,9 @@
 {
   options = let inherit (lib) mkOption; inherit (lib.types) raw attrsOf enum submodule str bool; in {
     deployments.nix = mkOption {
+      description = ''
+        This deployment strategry deploys a NixOS System to a remote NixOS server.
+      '';
       type = attrsOf (submodule ({ config, ... }: {
         options = {
           ip = mkOption {

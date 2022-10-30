@@ -61,6 +61,9 @@ in
 {
   options = let inherit (lib) mkOption; inherit (lib.types) attrsOf submodule listOf nullOr anything enum str oneOf bool lines int; in {
     provisioners.terraform.clouds.hcloud.servers = mkOption {
+      description = ''
+        A set of servers that should be created on Hetzner Cloud.
+      '';
       type = attrsOf (submodule ({ config, ... }: {
         options = {
           name = mkOption {
@@ -246,7 +249,6 @@ in
           addresses = {
             ipv4 = mkOption {
               type = str;
-              default = outputs."hcloud_server_${config._identifier}_ipv4_address".future;
               readOnly = true;
               description = ''
                 The resolved public IPv4 of the server.
@@ -255,11 +257,17 @@ in
             ipv6 = mkOption {
               type = str;
               readOnly = true;
-              default = outputs."hcloud_server_${config._identifier}_ipv6_address".future;
               description = ''
                 The resolved public IPv6 of the server.
               '';
             };
+          };
+        };
+
+        config = {
+          addresses = {
+            ipv4 = outputs."hcloud_server_${config._identifier}_ipv4_address".future;
+            ipv6 = outputs."hcloud_server_${config._identifier}_ipv6_address".future;
           };
         };
       }));

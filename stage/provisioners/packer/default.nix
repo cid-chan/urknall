@@ -113,6 +113,9 @@ in
         };
 
         assets = mkOption {
+          description = ''
+            Files to put into the directory from which packer is being run.
+          '';
           type = attrsOf (submodule ({ config, ... }: {
             options = {
               name = mkOption {
@@ -141,13 +144,13 @@ in
               path = mkOption {
                 type = str;
                 default = "assets/${builtins.baseNameOf config.name}";
+                description = ''
+                  The output path of the asset relative to the execution directory of packer.
+                '';
               };
             };
           }));
           default = {};
-          description = ''
-            Assets to include in the 
-          '';
         };
 
         module = mkOption {

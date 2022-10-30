@@ -9,6 +9,9 @@ in
 {
   options = let inherit (lib) mkOption; inherit (lib.types) attrsOf submodule str int; in {
     provisioners.terraform.clouds.hcloud.volumes = mkOption {
+      description = ''
+        A set of additional volumes to create.
+      '';
       type = attrsOf (submodule ({ config, ... }: {
         options = {
           name = mkOption {
@@ -39,7 +42,9 @@ in
           diskPath = mkOption {
             type = str;
             readOnly = true;
-            default = "/dev/disk/by-id/scsi-0HC_Volume_${outputs."hcloud_volume_${config.name}_id".future}";
+            description = ''
+              The disk path of the extra volume.
+            '';
           };
 
           size = mkOption {
@@ -49,6 +54,10 @@ in
               The size of the volume in GB.
             '';
           };
+        };
+
+        config = {
+          diskPath = "/dev/disk/by-id/scsi-0HC_Volume_${outputs."hcloud_volume_${config.name}_id".future}";
         };
       }));
       default = {};

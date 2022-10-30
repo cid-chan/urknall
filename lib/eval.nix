@@ -24,7 +24,11 @@
       extendedLib = 
         nixpkgs.lib.extend(self: super: { 
           urknall = lib.__finished__; 
-          mkFuture = lib.futures.mkFuture futures;
+          mkFuture = 
+            if stage == "!urknall::documentation" then
+              (_: name: "<future stage='<stage>' name='${name}'>")
+            else
+              lib.futures.mkFuture futures;
 
           types = super.types // {
             nixosConfigWith = { extraModules ? [], specialArgs ? {}, system ? null}: 

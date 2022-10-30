@@ -5,6 +5,9 @@ in
 {
   options = let inherit (lib) mkOption; inherit (lib.types) attrsOf submodule anything str; in {
     provisioners.terraform.clouds.hcloud.ssh-keys = mkOption {
+      description = ''
+        A set of SSH-Keys that should be included in Hetzner Cloud.
+      '';
       type = attrsOf (submodule ({ config, ... }: {
         options = {
           name = mkOption {

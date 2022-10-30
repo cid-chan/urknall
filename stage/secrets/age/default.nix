@@ -28,6 +28,9 @@ in
         '';
       };
       secrets = mkOption {
+        description = ''
+          Defines a set of files that should be decrypted using AGE.
+        '';
         type = attrsOf (submodule ({ config, ... }: {
           options = {
             path = mkOption {
@@ -48,11 +51,19 @@ in
             identity = mkOption {
               type = str;
               default = "$(cat AGE_IDENTITY_${config.name})";
+              description = ''
+                The path to the identity file that can decrypt the secret.
+
+                Can contain bash substitutions.
+              '';
             };
 
             decryptedPath = mkOption {
               type = str;
               default = lib.mkFuture cstage "${config._module.args.name}";
+              description = ''
+                The path to the decrypted secret.
+              '';
 
             };
           };

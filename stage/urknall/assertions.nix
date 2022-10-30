@@ -11,6 +11,9 @@
     };
 
     urknall.assertions = mkOption {
+      description = ''
+        A set of assertions that aborts the evaluation when their condition evaluates to `true`.
+      '';
       default = [];
       type = listOf (submodule ({ options = {
         condition = mkOption {
@@ -33,6 +36,9 @@
     };
 
     urknall.warnings = mkOption {
+      description = ''
+        A set of warnings that should be printed when their condition evaluates to `true`.
+      '';
       default = [];
       type = listOf (submodule ({ options = {
         condition = mkOption {

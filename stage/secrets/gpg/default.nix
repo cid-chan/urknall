@@ -20,6 +20,9 @@ in
         '';
       };
       secrets = mkOption {
+        description = ''
+          Defines a set of files that should be decrypted using GPG.
+        '';
         type = attrsOf (submodule ({ config, ... }: {
           options = {
             path = mkOption {

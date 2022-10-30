@@ -2,6 +2,9 @@
 {
   options = let inherit (lib) mkOption; inherit (lib.types) attrsOf submodule str; in {
     deployments.files = mkOption {
+      description = ''
+        This deployment strategy uploads files with the given permission to a remote system.
+      '';
       default = {};
       type = attrsOf (submodule ({ config, ... }: {
         options = {

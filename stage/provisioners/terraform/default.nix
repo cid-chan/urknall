@@ -115,6 +115,9 @@ in
         };
 
         assets = mkOption {
+          description = ''
+            Additional assets to add to the directory from which Terraform is executed.
+          '';
           type = attrsOf (submodule ({ config, ... }: {
             options = {
               name = mkOption {
@@ -143,16 +146,21 @@ in
               path = mkOption {
                 type = str;
                 default = "assets/${builtins.baseNameOf config.name}";
+                description = ''
+                  The output path of the asset relative to the execution directory of terraform.
+                '';
               };
             };
           }));
           default = {};
-          description = ''
-            Assets to include in the 
-          '';
         };
 
         outputs = mkOption {
+          description = ''
+            Defines a set of outputs of the terraform.
+
+            The resolved values of each output are then available in the stages that are executed after it.
+          '';
           default = {};
           type = attrsOf (submodule ({ config, ... }: {
             options = {
@@ -193,7 +201,7 @@ in
                 default = lib.mkFuture rootConfig.stage.name config.id;
                 readOnly = true;
                 description = ''
-                  The resulting future.
+                  The resulting value that resolves the future.
                 '';
               };
             };

@@ -2,6 +2,12 @@
 {
   options = let inherit (lib) mkOption; inherit (lib.types) raw attrsOf enum submodule str bool; in {
     deployments.nix-v3 = mkOption {
+      description = ''
+        This deployment strategy uses the new Nix v3 commands to
+        deploy a new NixOS System on a remote nix-server.
+
+        Warning: This mode is experimental!
+      '';
       type = attrsOf (submodule ({ config, ... }: {
         options = {
           ip = mkOption {

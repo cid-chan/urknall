@@ -9,6 +9,9 @@ in
 {
   options = let inherit (lib) mkOption; inherit (lib.types) attrsOf submodule str int nonEmptyListOf enum; in {
     provisioners.terraform.clouds.hcloud.networks = mkOption {
+      description = ''
+        A set of HCloud-Networks to create.
+      '';
       type = attrsOf (submodule ({ config, ... }: {
         options = {
           name = mkOption {

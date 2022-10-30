@@ -19,6 +19,13 @@
             ];
           };
 
+          packages.docJSON =
+            (self.lib.eval.buildUrknall {
+              inherit system;
+              stage = "!urknall::documentation";
+              modules = [ { stages = {}; } ];
+            }).config.urknall.build.manual.json;
+
           packages.urknall = pkgs.writeShellScriptBin "urknall" (
             let
               rawScript = (builtins.readFile ./urknall/runner.sh);

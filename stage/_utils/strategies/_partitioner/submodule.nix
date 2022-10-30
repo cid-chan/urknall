@@ -59,7 +59,6 @@ in
 
     partitionType = mkOption {
       type = enum [ "efi" "swap" "linux" "none"];
-      default = utils.byMap partitionTypeDefaultMap "linux" config.fsType;
       description = ''
         Defines the partition type.
         It is usually automatically detected by the used filesystem.
@@ -78,5 +77,6 @@ in
   config = {
     mountPoint = lib.mkDefault (lib.mkIf (config.fsType == "swap") null);
     drive = lib.mkDefault (lib.mkIf (config.fsType == "tmpfs") "none");
+    partitionType = lib.mkDefault (utils.byMap partitionTypeDefaultMap "linux" config.fsType);
   };
 }

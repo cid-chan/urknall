@@ -25,6 +25,9 @@ in
               "ccx11" "ccx12" "ccx21" "ccx22" "ccx31" "ccx32" "ccx41" "ccx42" "ccx51" "ccx52" "ccx52" # Dedicated Resources
             ];
             default = "cx11";
+            description = ''
+              The server tier that is used to create the server.
+            '';
           };
 
           files = mkOption {
@@ -39,38 +42,17 @@ in
             type = package;
             internal = true;
             readOnly = true;
-            default = localPkgs.callPackage ./../../../_utils/strategies/files {
-              inherit lib;
-              module = config.files;
-              targetRewriter = (path: "/mnt${path}");
-            };
           };
 
           __builderPackage = mkOption {
             type = package;
             internal = true;
             readOnly = true;
-            default = localPkgs.callPackage ./../../../_utils/strategies/rescue {
-              inherit lib;
-              module = config;
-              tableType = "dos";
-              preActivate = let k = config._module.args.name; in ''
-                ${config.__filePackage} $(cat hcloud-${k}-ip) hcloud-${k}-pkr.private.key
-              '';
-            };
           };
 
           snapshotName = mkOption {
             type = str;
             readOnly = true;
-            default = 
-              let
-                # Add all scripts to run here.
-                derivationCode = localPkgs.writeText "${config._module.args.name}" ''
-                  ${config.__builderPackage}
-                '';
-              in
-              "${builtins.baseNameOf (derivationCode.outPath)}";
             description = ''
               The name of the snapshot on Hetzner Cloud.
             '';
@@ -84,6 +66,34 @@ in
               Will hold the ID of the hetzner snapshot.
             '';
           };
+        };
+
+        config = {
+          __filePackage = 
+            localPkgs.callPackage ./../../../_utils/strategies/files {
+              inherit lib;
+              module = config.files;
+              targetRewriter = (path: "/mnt${path}");
+            };
+
+          __builderPackage =
+            localPkgs.callPackage ./../../../_utils/strategies/rescue {
+              inherit lib;
+              module = config;
+              tableType = "dos";
+              preActivate = let k = config._module.args.name; in ''
+                ${config.__filePackage} $(cat hcloud-${k}-ip) hcloud-${k}-pkr.private.key
+              '';
+            };
+
+          snapshotName =
+            let
+              # Add all scripts to run here.
+              derivationCode = localPkgs.writeText "${config._module.args.name}" ''
+                ${config.__builderPackage}
+              '';
+            in
+            lib.mkDefault "${builtins.baseNameOf (derivationCode.outPath)}";
         };
       }));
       default = {};
