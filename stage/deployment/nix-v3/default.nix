@@ -123,14 +123,14 @@
             ${lib.optionalString (server.substituteOnDestination) "--substitute-on-destination"} \
             --to ${if server.substituteOnDestination then "ssh" else "ssh-ng"}://${server.user}@${server.ip} ${toplevel}
 
-          ssh \
+          ${fakeSSH}/bin/ssh \
             ${lib.optionalString (!server.checkHostKeys) "-oUserKnownHostsFile=/dev/null -oStrictHostKeyChecking=no"} \
             ${server.user}@${server.ip} \
             -- \
             ${lib.optionalString (server.useRemoteSudo) "sudo"} \
             nix --experimental-features "nix-command" profile upgrade --profile /nix/var/nix/profiles/${server.profile} ${toplevel}
 
-          ssh \
+          ${fakeSSH}/bin/ssh \
             ${lib.optionalString (!server.checkHostKeys) "-oUserKnownHostsFile=/dev/null -oStrictHostKeyChecking=no"} \
             ${server.user}@${server.ip} \
             -- \

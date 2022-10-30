@@ -118,14 +118,14 @@
             ${lib.optionalString (server.substituteOnDestination) "--use-substitutes"} \
             --to ssh://${server.user}@${server.ip} ${toplevel}
 
-          ssh \
+          ${fakeSSH}/bin/ssh \
             ${lib.optionalString (!server.checkHostKeys) "-oUserKnownHostsFile=/dev/null -oStrictHostKeyChecking=no"} \
             ${server.user}@${server.ip} \
             -- \
             ${lib.optionalString (server.useRemoteSudo) "sudo"} \
             nix-env --profile /nix/var/nix/profiles/${server.profile} -i ${toplevel}
 
-          ssh \
+          ${fakeSSH}/bin/ssh \
             ${lib.optionalString (!server.checkHostKeys) "-oUserKnownHostsFile=/dev/null -oStrictHostKeyChecking=no"} \
             ${server.user}@${server.ip} \
             -- \
