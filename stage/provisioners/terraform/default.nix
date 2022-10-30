@@ -245,5 +245,10 @@ in
       ${setupCommands true}
       ${localPkgs.terraform}/bin/terraform output ${cfg.project.arguments} -json | ${localPkgs.jq}/bin/jq 'map_values(.value) | with_entries(.key = "tf_output_\(.key)")'
     '';
+
+    urknall.shell = ''
+      ${setupCommands false}
+      export PATH=${lib.makeBinPath [localPkgs.terraform]}:$PATH
+    '';
   };
 }

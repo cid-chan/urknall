@@ -182,6 +182,11 @@ in
       echo Using ${module} as main.pkr.hcl
       ${setupCommands false}
     '';
+
+    urknall.shell = ''
+      ${setupCommands false}
+      export PATH=${lib.makeBinPath [localPkgs.packer]}:$PATH
+    '';
   };
 }
 

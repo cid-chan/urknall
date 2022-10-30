@@ -16,4 +16,5 @@ in
   resolve = resolved.${stage}.config.stages.${stage}.urknall.build.resolve;
   apply = resolved.${stage}.config.stages.${stage}.urknall.build.apply;
   destroy = resolved.${stage}.config.stages.${stage}.urknall.build.destroy;
+  shell = resolved.${stage}.config.stages.${stage}.urknall.build.shell;
 }

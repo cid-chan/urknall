@@ -16,6 +16,11 @@
         type = package;
         internal = true;
       };
+
+      shell = mkOption {
+        type = package;
+        internal = true;
+      };
     };
   };
 
@@ -34,6 +39,13 @@
       ##
       # This file resolves the futures
       ${config.urknall.resolvers}
+    '';
+
+    urknall.build.shell = localPkgs.writeShellScript "shell" ''
+      ##
+      # This file resolves the futures
+      ${config.urknall.shell}
+      exec "$@"
     '';
   };
 }

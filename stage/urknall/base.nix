@@ -25,6 +25,14 @@
         '';
         default = "";
       };
+
+      shell = mkOption {
+        type = lines;
+        description = ''
+          These commands set up a shell environment for the user to implement manual interventions.
+        '';
+        default = "";
+      };
     };
   };
 }

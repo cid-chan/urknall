@@ -2,17 +2,22 @@
 
 # Help messages
 if [[ -z "$1" ]]; then
-  echo "$0 (apply|destroy) [OPTIONS...]"
+  echo "$0 (apply|destroy|shell) [OPTIONS...]"
   echo "run '$0 --help' for more information"
   exit 1
 fi
 
 if [[ "$1" == "--help" ]]; then
-  echo "$0 (run|destroy) [NIX_FILE|FLAKE] [OPTIONS...]"
   echo "$(basename $0) manages declaratively defined infrastructures."
   echo ""
-  echo "   run      - Creates updates the infrastructure"
-  echo "   destroy  - Destroys the infrastructure"
+  echo "$(basename $0) apply [NIX_FILE|FLAKE] [OPTIONS...]"
+  echo "  Creates or updates the infrastructure"
+  echo ""
+  echo "$(basename $0) destroy [NIX_FILE|FLAKE] [OPTIONS...]"
+  echo "  Destroys the infrastructure"
+  echo ""
+  echo "$(basename $0) shell [NIX_FILE|FLAKE] [STAGE] [OPTIONS...]"
+  echo "  Enters a shell for the given stage."
   exit 0
 fi
 
@@ -21,6 +26,12 @@ OPERATION=$1
 TARGET="$2"
 shift
 shift
+
+RUNNER_ARGS=()
+if [[ "$OPERATION" == "shell" ]]; then
+    RUNNER_ARGS+=( "$1" )
+    shift
+fi
 
 # Load the runner
 # Rewrites for legacy.
@@ -51,7 +62,7 @@ export URKNALL_ROOT_DIR=$(mktemp -d)
 export URKNALL_LOCAL_DIRECTORY="$PWD"
 
 # Run the actual script
-$RUNNER $OPERATION "$@"
+$RUNNER $OPERATION $RUNNER_ARGS "$@"
 
 # Preserve Exit-Code and clean up.
 EXITCODE=$?

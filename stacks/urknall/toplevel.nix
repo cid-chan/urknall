@@ -81,6 +81,29 @@ let
     }} "$@")
     popd
   '';
+
+  shellStage = stage:
+    let
+      launcher = localPkgs.writeShellScript "launch-shell" ''
+        export PATH=$PATH:$URKNALL_ORIGINAL_PATH
+        exec ${localPkgs.bashInteractive}/bin/bash -i >/dev/tty 2>/dev/tty </dev/tty
+      '';
+    in
+    ''
+    if [[ "$URKNALL_SELECTED_STAGE" == "${stage.name}" ]]; then
+      ###
+      # Stage: ${stage.name}
+      echo "Entering ${stage.name}"
+      export STAGE_DIR=$STAGES_ROOT/${stage.name}
+      pushd $STAGES_ROOT/${stage.name}
+      $(${config.urknall.build.evaluator {
+        stage = stage.name;
+        operation = "shell";
+        stageFileVar = "stage_files";
+      }} "$@") ${launcher}
+      popd
+    fi
+  '';
 in
 {
   options = let inherit (lib) mkOption; inherit (lib.types) package raw; in {
@@ -107,6 +130,11 @@ in
         internal = true;
       };
 
+      shell = mkOption {
+        type = package;
+        internal = true;
+      };
+
       run = mkOption {
         type = package;
         internal = true;
@@ -129,6 +157,18 @@ in
         ${builtins.concatStringsSep "\n" (map (destroyStage) (lib.lists.reverseList config.urknall.stageList))}
       '';
 
+    urknall.build.shell =
+      localPkgs.writeShellScript "shell" ''
+        ${scriptHead}
+
+        URKNALL_SELECTED_STAGE="$1"
+        shift 1
+
+        # Resolve variables first
+        ${builtins.concatStringsSep "\n" (map (resolveStage) config.urknall.stageList)}
+        ${builtins.concatStringsSep "\n" (map (shellStage) config.urknall.stageList)}
+      '';
+
     urknall.build.run =
       localPkgs.writeShellScript "run" ''
         OPERATION=$1
@@ -143,9 +183,13 @@ in
             exec ${config.urknall.build.destroy} "$@"
             ;;
 
+          shell)
+            exec ${config.urknall.build.shell} "$@"
+            ;;
+
           *)
             echo Unknown operation "'$OPERATION'".
-            echo "urknall [apply|destroy] [TARGET]"
+            echo "urknall [apply|destroy] [TARGET] [OPTIONS...]"
             exit 1
         esac
       '';
