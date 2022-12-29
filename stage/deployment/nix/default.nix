@@ -119,7 +119,7 @@
         (
           PATH="${fakeSSH}/bin:$PATH" nix-copy-closure \
             ${lib.optionalString (server.substituteOnDestination) "--use-substitutes"} \
-            --to ssh://${server.user}@${server.ip} ${toplevel}
+            --to ${server.user}@${server.ip} ${toplevel}
 
           ${fakeSSH}/bin/ssh \
             ${lib.optionalString (!server.checkHostKeys) "-oUserKnownHostsFile=/dev/null -oStrictHostKeyChecking=no"} \

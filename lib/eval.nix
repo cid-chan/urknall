@@ -91,24 +91,76 @@
   mkUrknall = 
     { modules
     , pkgs ? (system: import nixpkgs.outPath { inherit system; })
+    , systems ? [ "x86_64-linux" ]
     , ... 
     }@attrs:
     let
       extraAttrs = builtins.removeAttrs attrs [ "futures" "stage" "system" "modules" "pkgs" ];
 
+      fakeFlake = system: (pkgs system).writeTextFile {
+        name = "flake.nix";
+        text = ''
+          {
+            inputs.source.url = "@FLAKE_PATH@";
+            outputs = { self, source }:
+              {
+                urknall-resolve.${system}.default = 
+                  let 
+                    instance = source.@FLAKE_ATTR@.${system};
+                    resolved = instance.withFutures "''${toString ./resolves}/";
+                  in
+                  {
+                    urknall = instance.urknall;
+                    modules = [ instance.modules ];
+                    runner = instance.runner;
+                    resolve = resolved."@STAGE@".config.stages."@STAGE@".urknall.build.resolve;
+                    apply = resolved."@STAGE@".config.stages."@STAGE@".urknall.build.apply;
+                    destroy = resolved."@STAGE@".config.stages."@STAGE@".urknall.build.destroy;
+                    shell = resolved."@STAGE@".config.stages."@STAGE@".urknall.build.shell;
+                  };
+              };
+          }
+        '';
+      };
+
       evaluator = 
         ({ localPkgs, ... }: {
           urknall.build.evaluator =
             { stage, operation, stageFileVar }:
-            builtins.concatStringsSep " " [
-              "nix-build"
-              "--no-out-link ${toString ../urknall/flakes.nix}"
-              "--argstr path \"$URKNALL_FLAKE_PATH\""
-              "--argstr attr \"$URKNALL_FLAKE_ATTR\""
-              "--argstr stage \"${stage}\""
-              "--argstr stageFiles \"\$${stageFileVar}\""
-              "-A ${operation}"
-            ];
+            let
+              nom-evaluator = localPkgs.writeShellScript "nom-evaluator" ''
+                "$@" 2> >(${localPkgs.nix-output-monitor}/bin/nom --json >&2)
+              '';
+
+              # nix-command = builtins.concatStringsSep " " [
+              #   "nix-build"
+              #   "--no-out-link ${toString ../urknall/flakes.nix}"
+              #   "--argstr path \"$URKNALL_FLAKE_PATH\""
+              #   "--argstr attr \"$URKNALL_FLAKE_ATTR\""
+              #   "--argstr stage \"${stage}\""
+              #   "--argstr stageFiles \"\$${stageFileVar}\""
+              #   "--log-format internal-json"
+              #   "-v"
+              #   "-A ${operation}"
+              # ];
+              nix-command = toString (localPkgs.writeShellScript "evaluator" ''
+                STAGE_FILE_LOC="$1"
+                shift 1
+
+                TEMP_FLAKE=$(mktemp -d)
+                (
+                  export PATH=${nixpkgs.lib.makeBinPath [localPkgs.gnused]}:$PATH
+                  cat ${fakeFlake localPkgs.system} | sed s#@FLAKE_PATH@#$URKNALL_FLAKE_PATH#g | sed s/@FLAKE_ATTR@/$URKNALL_FLAKE_ATTR/g | sed 's/@STAGE@/${stage}/g' > $TEMP_FLAKE/flake.nix
+                  mkdir $TEMP_FLAKE/resolves
+                  if [ ! -z "$STAGE_FILE_LOC" ]; then
+                    cp -a $(echo $STAGE_FILE_LOC | sed "s/;/ /g") $TEMP_FLAKE/resolves
+                  fi
+                )
+                nix build "path:''${TEMP_FLAKE}#urknall-resolve.${localPkgs.system}.default.${operation}" --log-format internal-json --json --no-link -v "$@" | ${localPkgs.jq}/bin/jq -r '"\(.[0].outputs.out)"'
+                rm -rf $TEMP_FLAKE
+              '');
+            in
+            "${nom-evaluator} ${nix-command} \"\$${stageFileVar}\" \"$@\"";
         });
 
       urknall = 
@@ -139,5 +191,5 @@
               inherit system stage stageFiles;
             }) instance.config.stages;
         };
-    }) [ "x86_64-linux" ]));
+    }) systems));
 }

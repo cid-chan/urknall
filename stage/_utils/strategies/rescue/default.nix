@@ -45,17 +45,14 @@ writeShellScript "provision" ''
   # Build the important scripts
   nix-copy-closure --to root@$IPADDR ${partition.mount} -s
   nix-copy-closure --to root@$IPADDR ${partition.format} -s
-  ssh root@$IPADDR -- ${partition.format}
-  ssh root@$IPADDR -- ${partition.mount}
 
-  # Prepare the nix store for direct push
-  runScript ${./move-nix-store.sh} move-nix-store.sh
+  # Transfer the helper file
+  ${partition.upload "ssh root@$IPADDR" (src: dst: "scp \"${src}\" \"root@$IPADDR:${dst}\"")}
+  ssh root@$IPADDR -- ${partition.format} >/dev/null
+  ssh root@$IPADDR -- ${partition.mount} >/dev/null
 
   # Install the target closure.
-  nix-copy-closure --to root@$IPADDR ${system} -s
-
-  # Disable the hack we just did to copy the installed system
-  ssh root@$IPADDR -- umount /nix
+  nix-store --export $(nix-store -qR ${system}) | ssh root@$IPADDR -- nix-store --store /mnt --import
 
   # Pre-Activate-Script
   (

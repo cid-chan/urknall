@@ -145,6 +145,11 @@ in
         internal = true;
       };
 
+      build = mkOption {
+        type = package;
+        internal = true;
+      };
+
       run = mkOption {
         type = package;
         internal = true;
@@ -186,6 +191,23 @@ in
         # Resolve variables first
         ${builtins.concatStringsSep "\n" (map (resolveStage) config.urknall.stageList)}
         ${builtins.concatStringsSep "\n" (map (shellStage) config.urknall.stageList)}
+      '';
+
+    urknall.build.build =
+      localPkgs.writeShellScript "build" ''
+        set -ueo pipefail
+
+        ${stageHead}
+        ${scriptHead}
+
+        URKNALL_SELECTED_STAGE="$1"
+        shift 1
+
+        URKNALL_SELECTED_ARTIFACT="$1"
+        shift 1
+
+        # Resolve variables first
+        ${builtins.concatStringsSep "\n" (map (resolveStage) config.urknall.stageList)}
       '';
 
     urknall.build.run =

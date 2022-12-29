@@ -19,7 +19,16 @@
             ];
           };
 
-          packages.docJSON =
+          devShells.docs = pkgs.mkShell {
+            buildInputs = [
+              pkgs.hugo
+              pkgs.yarn
+            ];
+          };
+
+          packages.docs = pkgs.callPackage ./docs { inherit self; python3 = pkgs.python310; };
+
+          packages.options = 
             (self.lib.eval.buildUrknall {
               inherit system;
               stage = "!urknall::documentation";
@@ -59,6 +68,7 @@
 
       all-systems = {
         lib = import ./lib inputs;
+        flakeModules.default = ./etc/flake-parts.nix;
       };
     in
     all-systems // by-system;

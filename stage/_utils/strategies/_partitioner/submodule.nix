@@ -9,7 +9,7 @@ let
   };
 in
 {
-  options = let inherit (lib) mkOption; inherit (lib.types) str int oneOf enum nullOr bool; in {
+  options = let inherit (lib) mkOption; inherit (lib.types) str int oneOf enum nullOr bool attrsOf anything; in {
     label = mkOption {
       type = str;
       default = config._module.args.name;
@@ -38,6 +38,23 @@ in
       '';
     };
 
+    temporary-files = mkOption {
+      type = attrsOf str;
+      default = {};
+      description = ''
+        Extra files that should be pushed to the remote server.
+        These files will not be part of the original closure.
+      '';
+    };
+
+    extras = mkOption {
+      type = attrsOf anything;
+      default = {};
+      description = ''
+        Extra configuration options for different partitioning types.
+      '';
+    };
+
     reformat = mkOption {
       type = bool;
       default = true;
@@ -51,7 +68,7 @@ in
     };
 
     fsType = mkOption {
-      type = enum [ "ext2" "ext3" "ext4" "btrfs" "tmpfs" "bind" "swap" "fat" ];
+      type = enum [ "ext2" "ext3" "ext4" "btrfs" "tmpfs" "bind" "swap" "fat" "luks" ];
       description = ''
         The filesystem type.
       '';

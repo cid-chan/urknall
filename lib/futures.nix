@@ -1,12 +1,18 @@
 { nixpkgs, ... }:
 {
   resolveFutures = stageFiles:
-    
     if stageFiles == "" || stageFiles == null then
       {}
     else
       let 
-        pathes = nixpkgs.lib.splitString ";" stageFiles;
+        pathes = 
+          if nixpkgs.lib.hasSuffix "/" stageFiles then
+            let
+              fileNames = builtins.attrNames (builtins.readDir stageFiles);
+            in
+            (map (name: "${stageFiles}${name}") fileNames)
+          else
+            nixpkgs.lib.splitString ";" stageFiles;
         
         ensureIsObject = v:
           if v == null then
@@ -17,7 +23,7 @@
       builtins.foldl' (p: n: p//n) {} (map (path: ensureIsObject (builtins.fromJSON (builtins.readFile path))) pathes);
 
   mkFuture = futures: stage: name:
-    if builtins.hasAttr stage futures then (
+    if (builtins.hasAttr stage futures && futures.${stage} != null) then (
       if builtins.hasAttr name futures.${stage} then
         futures.${stage}.${name}
       else

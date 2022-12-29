@@ -5,8 +5,7 @@ Installs NixOS from a ssh-accessible non-nix-based rescue system.
 Steps:
 1. Install nix on the rescue system (`rescue.sh`)
 2. Copy format and mount script and run them.
-3. **Move the /nix/store to the target nix store** and bind-mount it to `/nix` (`move-nix-store.sh`)
-4. nix-copy-closure to the rescue system (This will land on the target disk)
+4. Transfer the closure to the target store.
 5. Install the profile and install the boot-loader. (`switch.sh`)
 
 The steps 3 and 4 are done,

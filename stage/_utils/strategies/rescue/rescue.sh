@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-echo '=====> Ensuring installing required packages is installed <===='
 
 install() {
   if command -v apt; then
@@ -19,10 +18,17 @@ install() {
   fi
 }
 
+echo '=====> Ensuring sudo is presentg <===='
 if ! command -v sudo; then
   install sudo
 fi
 
+if command -v nix-store; then
+  echo "Nix already present."
+  exit 0
+fi
+
+echo '=====> Ensuring the required packages for Nix are already present <===='
 if ! command -v curl; then
   if command -v wget; then
     curl() {

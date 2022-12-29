@@ -5,6 +5,9 @@ mkdir /mnt/{dev,proc,sys}
 mount -o bind /dev /mnt/dev
 mount -o bind /proc /mnt/proc
 mount -o bind /sys /mnt/sys
+if [ -e /sys/firmware/efi/efivars ]; then
+    mount -o bind /sys/firmware/efi/efivars /mnt/sys/firmware/efi/efivars
+fi
 
 # Add a /tmp on tmpfs if required.
 if [[ ! -d /mnt/tmp ]]; then
