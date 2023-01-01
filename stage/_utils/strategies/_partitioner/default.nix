@@ -45,6 +45,7 @@ let
         mount /dev/disk/by-label/${drive.label} /mnt${drive.mountPoint}
       '';
       funcMap = {
+        none = drive: "";
         luks = drive: 
           let
             password = getattr "password" null drive.extras;
@@ -129,6 +130,7 @@ let
   formatScript = d: part:
     let
       funcMap = {
+        none = device: drive: "";
         swap = device: drive: "mkswap -L '${drive.label}' ${device}";
         ext2 = device: drive: "mkfs.ext2 -L '${drive.label}' ${device}";
         ext3 = device: drive: "mkfs.ext3 -L '${drive.label}' ${device}";

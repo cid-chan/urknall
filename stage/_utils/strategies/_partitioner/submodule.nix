@@ -68,7 +68,7 @@ in
     };
 
     fsType = mkOption {
-      type = enum [ "ext2" "ext3" "ext4" "btrfs" "tmpfs" "bind" "swap" "fat" "luks" ];
+      type = enum [ "ext2" "ext3" "ext4" "btrfs" "tmpfs" "bind" "swap" "fat" "luks" "none" ];
       description = ''
         The filesystem type.
       '';
@@ -92,7 +92,7 @@ in
   };
 
   config = {
-    mountPoint = lib.mkDefault (lib.mkIf (config.fsType == "swap") null);
+    mountPoint = lib.mkDefault (lib.mkIf (config.fsType == "swap" || config.fsType == "none") null);
     drive = lib.mkDefault (lib.mkIf (config.fsType == "tmpfs") "none");
     partitionType = lib.mkDefault (utils.byMap partitionTypeDefaultMap "linux" config.fsType);
   };
