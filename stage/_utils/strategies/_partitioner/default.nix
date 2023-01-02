@@ -257,26 +257,31 @@ in
               requiresReformatCheckScript drive firstPart;
         in 
         if table then
-          ''
-            ${lib.optionalString (drive != "none") ''
-              wipefs -fa ${drive}
-              cat ${sfdiskScript} | sfdisk ${drive}
-            ''}
-            ${builtins.concatStringsSep "\n" format}
-          ''
+          {
+            partitions = 
+              lib.optionalString (drive != "none") ''
+                wipefs -fa ${drive}
+                cat ${sfdiskScript} | sfdisk ${drive}
+              '';
+            formatters = "${builtins.concatStringsSep "\n" format}";
+          }
         else
-          ''
-            if (__chk() { ${checkScript} }; __chk); then
-              ${lib.optionalString (drive != "none") "wipefs -fa ${drive}"}
-              ${formatScript drive firstPart}
-            fi
-          ''
+          {
+            partitions = "";
+            formatters = ''
+              if (__chk() { ${checkScript} }; __chk); then
+                ${lib.optionalString (drive != "none") "wipefs -fa ${drive}"}
+                ${formatScript drive firstPart}
+              fi
+            '';
+          }
       ) byDrive;
     in
     writeShellScript "format" ''
       set -xueo pipefail
       export PATH=${lib.makeBinPath [coreutils util-linux e2fsprogs btrfs-progs cryptsetup dosfstools]}
-      ${builtins.concatStringsSep "\n" formatters}
+      ${builtins.concatStringsSep "\n" (map (f: f.partitions) formatters)}
+      ${builtins.concatStringsSep "\n" (map (f: f.formatters) formatters)}
     '';
 
   mount = 
