@@ -28,6 +28,7 @@ let
       funcMap = {
         "swap" = mount: [];
         "bind" = mount: lib.unique (findParentsBy (f: f.drive) mount) ++ (findParentsBy (f: f.mountPoint) mount);
+        "none" = mount: [];
       };
     in
     (utils.byMap funcMap (findParentsBy (f: f.mountPoint)) d.fsType) d;
