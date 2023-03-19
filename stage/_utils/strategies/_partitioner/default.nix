@@ -79,7 +79,7 @@ let
 
   partionAndFormatThese =
     builtins.filter
-    (drive: builtins.elem drive.fsType [ "ext2" "ext3" "ext4" "btrfs" "fat" "swap" "luks"])
+    (drive: builtins.elem drive.fsType [ "ext2" "ext3" "ext4" "btrfs" "fat" "swap" "luks" "none"])
     driveList;
 
   requiresReformatCheckScript = drive: part:
