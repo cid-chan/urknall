@@ -126,7 +126,7 @@
             ${server.user}@${server.ip} \
             -- \
             ${lib.optionalString (server.useRemoteSudo) "sudo"} \
-            nix-env --profile /nix/var/nix/profiles/${server.profile} -i ${toplevel}
+            nix-env --profile /nix/var/nix/profiles/${server.profile} --set ${toplevel}
 
           ${fakeSSH}/bin/ssh \
             ${lib.optionalString (!server.checkHostKeys) "-oUserKnownHostsFile=/dev/null -oStrictHostKeyChecking=no"} \
