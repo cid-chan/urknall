@@ -1,6 +1,6 @@
 { driveSet, tableType
 , runCommand, writeShellScript, writeText, lib
-, coreutils, util-linux, systemd, parted, gnused
+, coreutils, util-linux, systemd, parted, gnused, gnugrep
 , e2fsprogs, btrfs-progs, dosfstools, cryptsetup, lvm2
 , multipath-tools, mdadm
 }:
@@ -284,7 +284,7 @@ in
         runCommand "blkdeactivate" {} ''
           mkdir -p $out/bin
           cat ${lvm2.bin}/bin/blkdeactivate | ${gnused}/bin/sed s#/run/current-system/sw/bin/##g > blkdeactivate.raw
-          cat blkdeactivate.raw | ${gnused}/bin/sed '/^TOOL=.*/i PATH=''$PATH:${pkgs.lib.makeBinPath [pkgs.multipath-tools pkgs.mdadm pkgs.gnugrep]}' > $out/bin/blkdeactivate
+          cat blkdeactivate.raw | ${gnused}/bin/sed '/^TOOL=.*/i PATH=''$PATH:${lib.makeBinPath [multipath-tools mdadm gnugrep]}' > $out/bin/blkdeactivate
           chmod +x $out/bin/blkdeactivate
         '';
         
