@@ -52,7 +52,15 @@ writeShellScript "provision" ''
   ssh root@$IPADDR -- ${partition.mount} >/dev/null
 
   # Install the target closure.
-  nix-store --export $(nix-store -qR ${system}) | ssh root@$IPADDR -- nix-store --store /mnt --import
+  ${
+    if module.direct then ''
+      nix-store --export $(nix-store -qR ${system}) | ssh root@$IPADDR -- nix-store --store /mnt --import
+    '' else ''
+      mkdir -p /mnt/nix/store
+      nix-copy-closure --to root@$IPADDR ${system} -s
+      ssh root@$IPADDR -- nix-copy-closure --to /mnt/nix/store ${system}
+    ''
+  }
 
   # Pre-Activate-Script
   (
