@@ -1,7 +1,7 @@
 { system }:
 { config, lib, ... }:
 {
-  options = let inherit (lib) mkOption; inherit (lib.types) attrsOf submodule raw boolean; in {
+  options = let inherit (lib) mkOption; inherit (lib.types) attrsOf submodule raw bool; in {
     drives = mkOption {
       type = attrsOf (submodule (import ./../_partitioner/submodule.nix));
       description = ''
@@ -10,7 +10,7 @@
     };
 
     direct = mkOption {
-      type = boolean;
+      type = bool;
       default = true;
       description = ''
         Copy the store directly to the target partition.
