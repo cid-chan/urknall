@@ -290,8 +290,16 @@ in
         
     in
     writeShellScript "format" ''
+      BLKDEACTIVATE="$(which blkdeactivate 2>/dev/null)"
+      if [[ -z "$BLKDEACTIVATE" ]]; then
+        BLKDEACTIVATE=${blkdeactivate}/bin/blkdeactivate
+      fi
+      TMPBIN=$(mktemp -d)
+      ln -s $BLKDEACTIVATE $TMPBIN/blkdeactivate
+
       set -xueo pipefail
-      export PATH=${lib.makeBinPath [coreutils util-linux e2fsprogs btrfs-progs cryptsetup dosfstools blkdeactivate]}
+
+      export PATH=$TMPBIN:${lib.makeBinPath [coreutils util-linux e2fsprogs btrfs-progs cryptsetup dosfstools blkdeactivate gnused gnugrep]}
       ${builtins.concatStringsSep "\n" (map (f: f.partitions) formatters)}
       ${builtins.concatStringsSep "\n" (map (f: f.formatters) formatters)}
     '';
