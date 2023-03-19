@@ -50,11 +50,11 @@ let
     echo "Resolving variables of ${stage.name}"
     export STAGE_DIR=$STAGES_ROOT/${stage.name}
     pushd $STAGES_ROOT/${stage.name} >/dev/null 2>/dev/null
-    $(${config.urknall.build.evaluator {
+    ($(${config.urknall.build.evaluator {
       stage = stage.name;
       operation = "resolve";
       stageFileVar = "stage_files";
-    }} "$@") | jq -s 'add | { "${stage.name}": . }' > $RESOLVE_DIR/${stage.name}.json
+    }} "$@") || exit 1) | jq -s 'add | { "${stage.name}": . }' > $RESOLVE_DIR/${stage.name}.json
 
     if [[ -z "$stage_files" ]]; then
       stage_files="$RESOLVE_DIR/${stage.name}.json"
@@ -74,7 +74,7 @@ let
       stage = stage.name;
       operation = "apply";
       stageFileVar = "stage_files";
-    }} "$@")
+    }} "$@") || exit $?
     popd
   '';
 
