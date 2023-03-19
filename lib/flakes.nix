@@ -1,5 +1,7 @@
-{ nixpkgs, flakes, ... }:
+{ nixpkgs, flakes, inputs, ... }:
 {
+  urknall-inputs = inputs;
+
   followPath = attr: root:
     builtins.foldl' ({ value, success }@current: a: 
       if !success then

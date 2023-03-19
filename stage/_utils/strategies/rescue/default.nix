@@ -39,6 +39,20 @@ writeShellScript "provision" ''
     sleep 1
   done
 
+  ${lib.optionalString (module.kexec.enable) ''
+    # Push the kexec-bundle to the remote system.
+    echo Uploading kexec_bundle from ${module.kexec.config.config.system.build.kexec_bundle}
+    scp ${module.kexec.config.config.system.build.kexec_bundle} root@$ESC_IPADDR:/root/kexec
+    ssh root@$IPADDR -- /root/kexec &
+
+    # Wait for the kexec'd rescue system to come online.
+    while ! ssh root@$IPADDR -- test -e /run/current-system; do
+      sleep 1
+    done
+
+    kill %1
+  ''}
+
   # Install Nix
   runScript ${./rescue.sh} rescue.sh
 

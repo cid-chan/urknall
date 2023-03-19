@@ -1,6 +1,7 @@
 {
   inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
   inputs.flake-utils.url = "github:numtide/flake-utils";
+  inputs.nixos-generators.url = "github:nix-community/nixos-generators";
   inputs.flake-compat = {
     url = "github:edolstra/flake-compat";
     flake = false;
