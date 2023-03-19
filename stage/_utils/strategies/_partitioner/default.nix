@@ -83,6 +83,11 @@ let
     (drive: builtins.elem drive.fsType [ "ext2" "ext3" "ext4" "btrfs" "fat" "swap" "luks" "none"])
     driveList;
 
+  mountThese =
+    builtins.filter
+    (drive: builtins.elem drive.fsType [ "ext2" "ext3" "ext4" "btrfs" "fat" "swap" "luks"])
+    partionAndFormatThese;
+
   requiresReformatCheckScript = drive: part:
     let
       funcMap = {
@@ -298,7 +303,6 @@ in
       ln -s $BLKDEACTIVATE $TMPBIN/blkdeactivate
 
       set -xueo pipefail
-
       export PATH=$TMPBIN:${lib.makeBinPath [coreutils util-linux e2fsprogs btrfs-progs cryptsetup dosfstools blkdeactivate gnused gnugrep]}
       ${builtins.concatStringsSep "\n" (map (f: f.partitions) formatters)}
       ${builtins.concatStringsSep "\n" (map (f: f.formatters) formatters)}
@@ -328,7 +332,7 @@ in
           fi
           sleep 1
         done
-      '') partionAndFormatThese)}
+      '') mountThese)}
 
       echo Mounting...
       ${builtins.concatStringsSep "\n" mounters}
