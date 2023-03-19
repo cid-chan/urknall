@@ -261,6 +261,7 @@ in
           {
             partitions = 
               lib.optionalString (drive != "none") ''
+                blkdeactivate -u -d force,retry -l wholevg ${drive}
                 wipefs -fa ${drive}
                 cat ${sfdiskScript} | sfdisk ${drive}
               '';
@@ -280,7 +281,7 @@ in
     in
     writeShellScript "format" ''
       set -xueo pipefail
-      export PATH=${lib.makeBinPath [coreutils util-linux e2fsprogs btrfs-progs cryptsetup dosfstools]}
+      export PATH=${lib.makeBinPath [coreutils util-linux e2fsprogs btrfs-progs cryptsetup dosfstools lvm2]}
       ${builtins.concatStringsSep "\n" (map (f: f.partitions) formatters)}
       ${builtins.concatStringsSep "\n" (map (f: f.formatters) formatters)}
     '';
