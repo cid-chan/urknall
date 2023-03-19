@@ -1,7 +1,7 @@
 { module, tableType
 , preActivate ? "", rebootAfterInstall ? false
 , writeShellScript, writeShellScriptBin
-, openssh
+, openssh, nix
 , callPackage, lib
 }:
 let
@@ -45,6 +45,7 @@ writeShellScript "provision" ''
   # Build the important scripts
   nix-copy-closure --to root@$IPADDR ${partition.mount} -s
   nix-copy-closure --to root@$IPADDR ${partition.format} -s
+  nix-copy-closure --to root@$IPADDR ${nix} -s
 
   # Transfer the helper file
   ${partition.upload "ssh root@$IPADDR" (src: dst: "scp \"${src}\" \"root@$IPADDR:${dst}\"")}
@@ -54,11 +55,11 @@ writeShellScript "provision" ''
   # Install the target closure.
   ${
     if module.direct then ''
-      nix-store --export $(nix-store -qR ${system}) | ssh root@$IPADDR -- nix-store --store /mnt --import
+      nix-store --export $(nix-store -qR ${system}) | ssh root@$IPADDR -- ${nix}/bin/nix-store --store /mnt --import
     '' else ''
       mkdir -p /mnt/nix/store
       nix-copy-closure --to root@$IPADDR ${system} -s
-      ssh root@$IPADDR -- nix-copy-closure --to /mnt/nix/store ${system}
+      ssh root@$IPADDR -- ${nix}/bin/nix-copy-closure --to /mnt/nix/store ${system}
     ''
   }
 
