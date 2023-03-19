@@ -283,7 +283,7 @@ in
       blkdeactivate =
         runCommand "blkdeactivate" {} ''
           mkdir -p $out/bin
-          cat ${lvm2}/bin/blkdeactivate | ${gnused}/bin/sed s#/run/current-system/sw/bin/##g > blkdeactivate.raw
+          cat ${lvm2.bin}/bin/blkdeactivate | ${gnused}/bin/sed s#/run/current-system/sw/bin/##g > blkdeactivate.raw
           cat blkdeactivate.raw | ${gnused}/bin/sed s/^TOOL=.*/i PATH=''$PATH:${lib.makeBinPath [multipath-tools mdadm]} > $out/bin/blkdeactivate
           chmod +x blkdeactivate
         '';
