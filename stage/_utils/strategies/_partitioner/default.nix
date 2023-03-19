@@ -1,7 +1,8 @@
 { driveSet, tableType
-, writeShellScript, writeText, lib
+, runCommand, writeShellScript, writeText, lib
 , coreutils, util-linux, systemd, parted
 , e2fsprogs, btrfs-progs, dosfstools, cryptsetup, lvm2
+, multipath-tools, mdadm
 }:
 let
   utils = import ./utils.nix { inherit lib; };
@@ -278,10 +279,19 @@ in
             '';
           }
       ) byDrive;
+
+      blkdeactivate =
+        runCommand "blkdeactivate" {} ''
+          mkdir -p $out/bin
+          cat ${lvm2}/bin/blkdeactivate | ${pkgs.gnused}/bin/sed s#/run/current-system/sw/bin/##g > blkdeactivate.raw
+          cat blkdeactivate.raw | ${pkgs.gnused}/bin/sed s/^TOOL=.*/i PATH=''$PATH:${lib.makeBinPath [multipath-tools mdadm]} > $out/bin/blkdeactivate
+          chmod +x blkdeactivate
+        '';
+        
     in
     writeShellScript "format" ''
       set -xueo pipefail
-      export PATH=${lib.makeBinPath [coreutils util-linux e2fsprogs btrfs-progs cryptsetup dosfstools lvm2]}
+      export PATH=${lib.makeBinPath [coreutils util-linux e2fsprogs btrfs-progs cryptsetup dosfstools blkdeactivate]}
       ${builtins.concatStringsSep "\n" (map (f: f.partitions) formatters)}
       ${builtins.concatStringsSep "\n" (map (f: f.formatters) formatters)}
     '';
