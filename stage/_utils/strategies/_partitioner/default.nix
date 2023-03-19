@@ -1,7 +1,7 @@
 { driveSet, tableType
 , writeShellScript, writeText, lib
 , coreutils, util-linux, systemd, parted
-, e2fsprogs, btrfs-progs, dosfstools, cryptsetup
+, e2fsprogs, btrfs-progs, dosfstools, cryptsetup, lvm2
 }:
 let
   utils = import ./utils.nix { inherit lib; };
