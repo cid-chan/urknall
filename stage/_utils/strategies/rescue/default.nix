@@ -59,7 +59,7 @@ writeShellScript "provision" ''
     '' else ''
       mkdir -p /mnt/nix/store
       nix-copy-closure --to root@$IPADDR ${system} -s
-      ssh root@$IPADDR -- ${nix}/bin/nix --experimental-features=nix-command copy --to /mnt ${system} --no-check-sigs
+      ssh root@$IPADDR -- ${nix}/bin/nix --experimental-features nix-command copy --to /mnt ${system} --no-check-sigs
     ''
   }
 
