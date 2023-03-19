@@ -20,10 +20,8 @@ mkdir /mnt/etc/
 touch /mnt/etc/NIXOS
 
 # Install the system profile with a temporary nix-env in tmp.
-ln -sf $(realpath $(which nix-env)) /mnt/tmp/nix-env
-chroot /mnt /tmp/nix-env -p /nix/var/nix/profiles/system --set $1
-rm /mnt/tmp/nix-env
-
+chroot /mnt $1/sw/bin/nix-env -p /nix/var/nix/profiles/system --set $1
+#
 # Activate and boot (with bootloader install)
 chroot /mnt /nix/var/nix/profiles/system/activate
 chroot /mnt /run/current-system/bin/switch-to-configuration boot
