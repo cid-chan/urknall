@@ -220,7 +220,7 @@ let
 
         script =
           lib.lists.imap1 (i: part:
-            "${utils.addPartitionIndex drive i} : size=${part.size},type=${types.${part.partitionType}}"
+            "${utils.addPartitionIndex drive i} : ${lib.optionalString (part.size != "") "size=${part.size},"}type=${types.${part.partitionType}}"
           ) partitions;
       in
       ''
