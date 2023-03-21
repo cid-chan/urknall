@@ -42,7 +42,7 @@ in
     ({
       provisioners.terraform.backend.providers.hcloud = {
         source = "hetznercloud/hcloud";
-        version = "1.35.2";
+        version = "1.36.2";
       };
       provisioners.terraform.project.module = ''
         provider "hcloud" {
