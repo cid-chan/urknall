@@ -90,7 +90,7 @@ in
             '';
           };
 
-          generation = mkOption [
+          generation = mkOption {
             type = str;
             default = "";
             description = "Changing this value triggers a replacement of the server. Volumes and IPs will remain the same.";
