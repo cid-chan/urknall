@@ -544,7 +544,7 @@ in
       resource "null_resource" "${module._identifier}_trigger_replace" {
         triggers = {
           ${lib.optionalString (module.volumes != []) ''
-            volumes = "${builtins.concatStringsSep " " (map (vol: lib.urknall.variable "hcloud_volume.${vol}.id") module.volumes}"
+            volumes = "${builtins.concatStringsSep " " (map (vol: lib.urknall.variable "hcloud_volume.${vol}.id") module.volumes)}"
           ''}
           ${lib.optionalString (module.generation != "") ''
             generation = "${module.generation}"
