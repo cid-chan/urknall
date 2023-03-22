@@ -251,11 +251,16 @@ in
       formatters = lib.mapAttrsToList (drive: partitions:
         let 
           sfdiskScript = writeText "sfdisk-script" (partitioner.${tableType} drive partitions);
-          format = lib.lists.imap1 (i: part: formatScript (utils.addPartitionIndex drive i) part) partitions;
 
           firstPart = builtins.head partitions;
 
           table = (builtins.length partitions > 1) || firstPart.size != null;
+          format = lib.lists.imap1 (i: part: formatScript (
+            if table then
+              utils.addPartitionIndex drive i
+            else
+              drive
+          ) part) partitions;
 
           checkScript =
             if firstPart.reformat then
