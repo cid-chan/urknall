@@ -157,7 +157,9 @@
                   fi
                 )
                 nix build "path:''${TEMP_FLAKE}#urknall-resolve.${localPkgs.system}.default.${operation}" --log-format internal-json --json --no-link -v "$@" | ${localPkgs.jq}/bin/jq -r '"\(.[0].outputs.out)"'
+                EXITCODE=''${PIPESTATUS[0]}
                 rm -rf $TEMP_FLAKE
+                exit $EXITCODE
               '');
             in
             "${nom-evaluator} ${nix-command} \"\$${stageFileVar}\" \"$@\"";
