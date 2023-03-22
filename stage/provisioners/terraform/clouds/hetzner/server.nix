@@ -166,7 +166,7 @@ in
             description = ''
               List of volumes to add.
               Define volumes using `hcloud.volumes`.
-              For hcloud.server.[name].files, the volumes will be accessible as `/tmp/volume/[name]`.
+              For hcloud.server.[name].files, the volumes will be accessible as `/tmp/volumes/[name]`.
               For subsequent stages, the disk-path will be accessible using the future `hcloud.volumes.[name].diskPath` 
             '';
           };
