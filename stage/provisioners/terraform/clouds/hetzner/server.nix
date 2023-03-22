@@ -90,6 +90,12 @@ in
             '';
           };
 
+          generation = mkOption [
+            type = str;
+            default = "";
+            description = "Changing this value triggers a replacement of the server. Volumes and IPs will remain the same.";
+          };
+
           type = mkOption {
             type = enum [ 
               "cx11" "cpx11" "cx21" "cpx21" "cx31" "cpx31" "cx41" "cpx41" "cx51" "cpx51"              # Shared Resources
@@ -528,7 +534,22 @@ in
           rescue = "linux64"
         ''}
 
+        lifecycle {
+          replace_triggered_by = [ null_resource.${module._identifier}_trigger_replace ]
+        }
+
         ${module.extraConfig}
+      }
+
+      resource "null_resource" "${module._identifier}_trigger_replace" {
+        triggers = {
+          ${lib.optionalString (module.volumes != []) ''
+            volumes = "${builtins.concatStringsSep " " (map (vol: lib.urknall.variable "hcloud_volume.${vol}.id")}"
+          ''}
+          ${lib.optionalString (module.generation != "") ''
+            generation = "${module.generation}"
+          ''}
+        }
       }
     '') cfg.servers);
 
