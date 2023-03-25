@@ -7,7 +7,7 @@
   inputs.flake-parts.url = "github:hercules-ci/flake-parts";
 
   outputs = { self, nixpkgs, flake-parts, ... }@inputs: 
-    flake-parts.flake.mkFlake { inherit inputs; }:
+    flake-parts.flake.mkFlake { inherit inputs; }
     {
       imports = [
         inputs.urknall.flakeModule
