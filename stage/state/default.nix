@@ -180,7 +180,7 @@ in
     };
   };
 
-  config = lib.mkIf (config.state != {}) {
+  config = lib.mkIf (config.state.files != {}) {
     urknall.appliers = wrapPushPull commands;
 
     urknall.destroyers = wrapPushPull ''
