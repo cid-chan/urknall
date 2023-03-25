@@ -81,7 +81,7 @@ in
             direction = "${fw.direction}"
             protocol = "${fw.protocol}"
 
-            ${lib.optionalString (fw.protocol == "tcp" || fw.protocol = "udp") ''
+            ${lib.optionalString (fw.protocol == "tcp" || fw.protocol == "udp") ''
               ${
                 if (builtins.isInt fw.port) then 
                   "port = \"${toString port}\""
