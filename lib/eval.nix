@@ -132,17 +132,6 @@
                 "$@" 2> >(${localPkgs.nix-output-monitor}/bin/nom --json >&2)
               '';
 
-              # nix-command = builtins.concatStringsSep " " [
-              #   "nix-build"
-              #   "--no-out-link ${toString ../urknall/flakes.nix}"
-              #   "--argstr path \"$URKNALL_FLAKE_PATH\""
-              #   "--argstr attr \"$URKNALL_FLAKE_ATTR\""
-              #   "--argstr stage \"${stage}\""
-              #   "--argstr stageFiles \"\$${stageFileVar}\""
-              #   "--log-format internal-json"
-              #   "-v"
-              #   "-A ${operation}"
-              # ];
               nix-command = toString (localPkgs.writeShellScript "evaluator" ''
                 STAGE_FILE_LOC="$1"
                 shift 1

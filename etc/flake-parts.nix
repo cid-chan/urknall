@@ -1,7 +1,10 @@
 self:
-{ config, lib, ... }:
+{ config, lib
+, withSystem
+, ...
+}:
 let
-  urknallType = { system, pkgs }: lib.mkOptionType {
+  urknallType = lib.mkOptionType {
     name = "Toplevel Urknall Configuration.";
     description = ''
       A specification of a urknall-based infrastructure.
@@ -9,28 +12,22 @@ let
 
     merge = loc: defs:
       self.lib.mkUrknall {
-        pkgs = _: pkgs;
-        systems = [ system ];
+        pkgs = system: withSystem system ({pkgs, ...}: pkgs);
+        systems = config.systems;
         modules = defs;
       };
   };
 in
 {
-  config = {
-    perSystem = { system, pkgs, ... }:
-      {
-        options = {
-          urknall = mkOption {
-            type = lazyAttrsOf (urknallType { inherit system pkgs; });
-            description = ''
-              A named set of urknall configurations.
-            '';
-            default = {};
-          };
-        };
-      }
-    flake = {
-      perSystem.flake.urknall = lib.mapAttrs (k: v: v.urknall) config.systems;
+  options = {
+    urknallConfigurations = lib.mkOption {
+      type = lib.types.attrsOf urknallType;
+      default = {};
+      description = "Urknall configurations";
     };
+  };
+
+  config = {
+    flake.urknall = config.urknall;
   };
 }

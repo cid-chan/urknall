@@ -70,6 +70,18 @@
       all-systems = {
         lib = import ./lib inputs;
         flakeModules.default = ./etc/flake-parts.nix;
+        flakeModule = ./etc/flake-parts.nix;
+
+        templates = {
+          empty = {
+            path = ./templates/empty;
+            description = "A simple empty urknall configuration using a flake.";
+          };
+          flake-parts = {
+            path = ./templates/flake-parts;
+            description = "A simple empty urknall configuration using a flake-parts.";
+          };
+        };
       };
     in
     all-systems // by-system;
