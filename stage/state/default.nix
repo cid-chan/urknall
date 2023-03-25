@@ -192,6 +192,6 @@ in
     urknall.resolveCommands = lib.mapAttrs' (k: v: {
       name = k;
       value = "echo \\\"${config.state.resultDirectory}/${k}\\\"";
-    }) cfg.state.files;
+    }) config.state.files;
   };
 }
