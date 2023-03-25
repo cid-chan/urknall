@@ -84,9 +84,9 @@ in
             ${lib.optionalString (fw.protocol == "tcp" || fw.protocol == "udp") ''
               ${
                 if (builtins.isInt fw.port) then 
-                  "port = \"${toString port}\""
+                  "port = \"${toString fw.port}\""
                 else
-                  "port = \"${toString port.from}-${toString port.to}\""
+                  "port = \"${toString fw.port.from}-${toString fw.port.to}\""
               }
             ''}
 
