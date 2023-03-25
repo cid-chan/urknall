@@ -94,7 +94,7 @@ in
               ${builtins.concatStringsSep "," (map (ip: "\"${ip}\"") fw.ips)}
             ]
           }
-        '') firewall.rules}
+        '') firewall.rules)}
       }
     '') cfg.firewalls);
 
