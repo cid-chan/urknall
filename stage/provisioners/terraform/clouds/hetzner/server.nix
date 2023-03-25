@@ -187,6 +187,14 @@ in
             '';
           };
 
+          firewalls = mkOption {
+            type = listOf str;
+            default = [];
+            description = ''
+              A list of firewalls the machine should be attached to.
+            '';
+          };
+
           networks = mkOption {
             type = attrsOf (submodule ({ config, ... }: { options = {
               network = mkOption {
@@ -512,6 +520,12 @@ in
             ''}
           ''}
         }
+
+        ${lib.optionalString (module.firewalls.length > 0) ''
+          firewall_ids = [
+              ${builtins.concatStringsSep "," (map (name: "hcloud_firewall.${name}.id") module.firewalls)}
+          ]
+        ''}
 
         labels = {
           ${lib.optionalString (module.ipv4 != false && module.ipv6 != false) ''
