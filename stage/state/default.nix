@@ -17,7 +17,6 @@ let
   '';
 
   commands = ''
-    set -xueo pipefail
     ${builtins.concatStringsSep "\n" (lib.mapAttrsToList (name: value: 
       ''
         if [[ -e "$STATE_CURRENT_DIR/${value.generation}-${name}" ]]; then
@@ -79,14 +78,20 @@ in
     };
 
     state.storage.type = mkOption {
-      type = enum [ "rsync" ];
+      type = enum [ "rsync" "git" ];
       default = "rsync";
       description = ''
         Where should the state be stored?
 
         Possible values:
         - rsync: Use rsync to synchronize the state. This can be used with SSH and local directories.
+        - git: Use a git repository to track changes to the state.
       '';
+    };
+
+    state.storage.target = mkOption {
+      type = str;
+      description = "The path to the directory that stores the state.";
     };
 
     state.storage.pullCommand = mkOption {
@@ -154,7 +159,7 @@ in
           sensitive = mkOption {
             type = bool;
             default = false;
-            description = "Encrypt the contents of the file.";
+            description = "If set to true, the contents of the file will be encrypted.";
           };
 
           generation = mkOption {
