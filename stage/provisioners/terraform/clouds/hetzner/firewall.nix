@@ -54,7 +54,7 @@ in
                         description = "The last port";
                       };
                     };
-                  })) };
+                  })) ];
                   description = "Which ports to filter. Only required with tcp and udp";
                 };
                 ips = mkOption {
