@@ -1,15 +1,20 @@
 { lib, config, ... }:
+let
+  modules = config.urknall.stageModules;
+in
 {
-  options = let inherit (lib) mkOption; inherit (lib.types) stageModule attrsOf listOf str raw; in {
+  options = let inherit (lib) mkOption; inherit (lib.types) stageModule attrsOf listOf str raw anything; in {
     urknall.stageList = mkOption {
       type = listOf raw;
       internal = true;
     };
+    urknall.stageModules = mkOption {
+      type = listOf anything;
+      default = [];
+    };
     stages = mkOption {
       type = attrsOf (stageModule ({ config, ... }: {
-        imports = [
-          ./../../stage
-        ];
+        imports = [ ./../../stage ] ++ modules;
 
         options = {
           stage.name = mkOption {

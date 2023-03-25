@@ -4,6 +4,9 @@ let
   cfg = config.secrets.age;
 in
 {
+  imports = [
+    ./state.nix
+  ];
   options = let inherit (lib) mkOption; inherit (lib.types) attrsOf listOf submodule str path package; in {
     secrets.age = {
       ageCommand = mkOption {
