@@ -38,6 +38,7 @@
 
         };
       }));
+      default = {};
       description = ''
         The Urknall Deploy-Process is implemented in stages.
         Each stage provides dynamic values to the next stage.
