@@ -13,7 +13,7 @@ in
         type = enum [ "local" "cloud" ];
         default = "local";
         description = ''
-          What backend should pulumi use?
+          What backend should terraform use?
 
           When using cloud, make sure the Execution Mode is set to "Local".
         '';
