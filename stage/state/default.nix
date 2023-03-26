@@ -3,6 +3,25 @@
 let
   cstage = config.stage.name;
 
+  filesInOrder =
+    let
+      toDagEntry = name: value:
+        lib.urknall.dag.entryBetween
+          value.before
+          value.after
+          name;
+
+      dagEntries = lib.mapAttrs (toDagEntry) config.state.files;
+
+      sorted = lib.urknall.dag.topoSort dagEntries;
+    in
+    if sorted ? result then
+      sorted.result
+    else
+      throw "Couldn't resolve evaluation order.";
+
+  mapFiles = f: map (file: f file.data config.state.files.${file.data}) filesInOrder;
+
   decryptor = localPkgs.writeShellScript "decryptor" config.state.encryption.decryptionCommand;
   encryptor = localPkgs.writeShellScript "encryptor" config.state.encryption.encryptionCommand;
 
@@ -120,7 +139,7 @@ let
     }
 
 
-    ${builtins.concatStringsSep "\n" (lib.mapAttrsToList (name: value: 
+    ${builtins.concatStringsSep "\n" (mapFiles (name: value: 
       ''
         if [[ -e "$STATE_CURRENT_DIR/${value.generation}-${name}" ]]; then
           copy_maybe_recursive "$STATE_CURRENT_DIR/${value.generation}-${name}" "$STATE_NEXT_DIR/${value.generation}-${name}"
@@ -128,21 +147,21 @@ let
           decrypt_recursive_${toString value.sensitive} "$STATE_CURRENT_DIR/${value.generation}-${name}" "$STATE_TEMP_DIR/${name}"
 
           ${lib.optionalString value.alwaysUpdate ''
-            ${localPkgs.writeShellScript "generate-${name}" value.generator} "$STATE_UPDATE_DIR/${name}" "$STATE_TEMP_DIR/${name}"
+            RESULT_PATH="$STATE_RESULT_DIR" ${localPkgs.writeShellScript "generate-${name}" value.generator} "$STATE_UPDATE_DIR/${name}" "$STATE_TEMP_DIR/${name}"
             if compare_files "$STATE_UPDATE_DIR/${name}" "$STATE_TEMP_DIR/${name}"; then
               copy_maybe_recursive "$STATE_UPDATE_DIR/${name}" "$STATE_TEMP_DIR/${name}"
               encrypt_recursive_${toString value.sensitive} "$STATE_UPDATE_DIR/${name}" "$STATE_NEXT_DIR/${value.generation}-${name}"
             fi
           ''}
         else
-          ${localPkgs.writeShellScript "generate-${name}" value.generator} "$STATE_TEMP_DIR/${name}" ""
+          RESULT_PATH="$STATE_RESULT_DIR" ${localPkgs.writeShellScript "generate-${name}" value.generator} "$STATE_TEMP_DIR/${name}" ""
           encrypt_recursive_${toString value.sensitive} "$STATE_TEMP_DIR/${name}" "$STATE_NEXT_DIR/${value.generation}-${name}"
         fi
 
         copy_maybe_recursive "$STATE_TEMP_DIR/${name}" "$STATE_RESULT_DIR/${name}"
         rm -r "$STATE_TEMP_DIR/${name}"
       ''
-    ) config.state.files)}
+    ))}
   '';
 
   wrapPush = command: ''
@@ -263,6 +282,19 @@ in
             type = listOf str;
             default = [];
             description = ''
+              This can be used to deduce the order in which the files should be resolved.
+
+              This allows the generator to depend on previously generated files.
+            '';
+          };
+
+          after = mkOption {
+            type = listOf str;
+            default = [];
+            description = ''
+              This can be used to deduce the order in which the files should be resolved.
+
+              This allows the generator to depend on previously generated files.
             '';
           };
 
@@ -284,10 +316,11 @@ in
             description = "Files with a different generation will get regenerated, regardless of whether they have already been created.";
           };
 
-          inStagePath = mkOption {
+          generatorPath = mkOption {
             type = str;
             readOnly = true;
-            description = "The path, using a bash variable, "
+            description = "The path, using an environment variable 'RESULT_PATH'. It only works within your generator script.";
+            default = "$RESULT_PATH/${config._module.args.name}";
           };
 
           path = mkOption {
