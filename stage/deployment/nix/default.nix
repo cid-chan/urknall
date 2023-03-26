@@ -104,39 +104,58 @@
   };
 
   config = {
-    urknall.appliers = lib.mkMerge (lib.mapAttrsToList (name: server: 
+    urknall.appliers = 
       let
-        toplevel = server.config.config.system.build.toplevel;
+        configs = lib.mapAttrsToList (name: server: 
+          let
+            toplevel = server.config.config.system.build.toplevel;
 
-        fakeSSH = localPkgs.writeShellScriptBin "ssh" ''
-          exec ${localPkgs.openssh}/bin/ssh \
-            ${lib.optionalString (!server.checkHostKeys) "-oUserKnownHostsFile=/dev/null -oStrictHostKeyChecking=no"} \
-            "$@"
-        '';
+            fakeSSH = localPkgs.writeShellScriptBin "ssh" ''
+              exec ${localPkgs.openssh}/bin/ssh \
+                ${lib.optionalString (!server.checkHostKeys) "-oUserKnownHostsFile=/dev/null -oStrictHostKeyChecking=no"} \
+                "$@"
+            '';
+          in
+          {
+            inherit name server;
+
+            deploy = localPkgs.writeShellScript "deploy-${name}" ''
+              PATH="${fakeSSH}/bin:$PATH" nix-copy-closure \
+                ${lib.optionalString (server.substituteOnDestination) "--use-substitutes"} \
+                --to ${server.user}@${server.ip} ${toplevel}
+            '';
+
+            switch = ''
+              PATH="${fakeSSH}/bin:$PATH" nix-copy-closure \
+                ${lib.optionalString (server.substituteOnDestination) "--use-substitutes"} \
+                --to ${server.user}@${server.ip} ${toplevel}
+
+              ${fakeSSH}/bin/ssh \
+                ${lib.optionalString (!server.checkHostKeys) "-oUserKnownHostsFile=/dev/null -oStrictHostKeyChecking=no"} \
+                ${server.user}@${server.ip} \
+                -- \
+                ${lib.optionalString (server.useRemoteSudo) "sudo"} \
+                nix-env --profile /nix/var/nix/profiles/${server.profile} --set ${toplevel}
+
+              ${fakeSSH}/bin/ssh \
+                ${lib.optionalString (!server.checkHostKeys) "-oUserKnownHostsFile=/dev/null -oStrictHostKeyChecking=no"} \
+                ${server.user}@${server.ip} \
+                -- \
+                ${lib.optionalString (server.useRemoteSudo) "sudo"} \
+                ${toplevel}/bin/switch-to-configuration ${server.applyMode}
+            '';
+          }
+        ) config.deployments.nix;
+
       in
-      ''
-        echo "Deploying NixOS ${name} to ${server.ip} (with user: ${server.user})"
-        (
-          PATH="${fakeSSH}/bin:$PATH" nix-copy-closure \
-            ${lib.optionalString (server.substituteOnDestination) "--use-substitutes"} \
-            --to ${server.user}@${server.ip} ${toplevel}
-
-          ${fakeSSH}/bin/ssh \
-            ${lib.optionalString (!server.checkHostKeys) "-oUserKnownHostsFile=/dev/null -oStrictHostKeyChecking=no"} \
-            ${server.user}@${server.ip} \
-            -- \
-            ${lib.optionalString (server.useRemoteSudo) "sudo"} \
-            nix-env --profile /nix/var/nix/profiles/${server.profile} --set ${toplevel}
-
-          ${fakeSSH}/bin/ssh \
-            ${lib.optionalString (!server.checkHostKeys) "-oUserKnownHostsFile=/dev/null -oStrictHostKeyChecking=no"} \
-            ${server.user}@${server.ip} \
-            -- \
-            ${lib.optionalString (server.useRemoteSudo) "sudo"} \
-            ${toplevel}/bin/switch-to-configuration ${server.applyMode}
-        )
-      ''
-    ) config.deployments.nix);
+      lib.mkIf (config.deployments.nix != {}) ''
+        set -e
+        cat ${localPkgs.writeText "deployCommands" (builtins.concatStringsSep "\n" (map (c: "${c.deploy}") configs))} | ${localPkgs.parallel}/bin/parallel "${localPkgs.bash}/bin/bash -c {}"
+        ${builtins.concatStringsSep "\n" (map (c: ''
+          echo "Deploying NixOS ${c.name} to ${c.server.ip} (with user: ${c.server.user})"
+          ${c.switch}
+        '') configs)}
+      '';
   };
 }
 
