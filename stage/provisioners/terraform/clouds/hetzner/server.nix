@@ -412,19 +412,19 @@ in
       '') (builtins.attrValues module.networks))}
 
       ${lib.optionalString (module.ipv4 != false && module.ipv6 != false) ''
-        resource "null_resource" "hcloud_server_${module._identifier}_primary_ip_workaround_bind_late" {
-          triggers = {
-            always_run = timestamp()
-          }
-        }
+        # resource "null_resource" "hcloud_server_${module._identifier}_primary_ip_workaround_bind_late" {
+        #   triggers = {
+        #     always_run = timestamp()
+        #   }
+        # }
 
-        data "external" "hcloud_server_${module._identifier}_primary_ip_workaround" {
-          depends_on = [
-            null_resource.hcloud_server_${module._identifier}_primary_ip_workaround_bind_late
-          ]
+        # data "external" "hcloud_server_${module._identifier}_primary_ip_workaround" {
+        #   depends_on = [
+        #     null_resource.hcloud_server_${module._identifier}_primary_ip_workaround_bind_late
+        #   ]
 
-          program = [ "sh", "-c", "${assets."hcloud_server_${module._identifier}_primary_ip_workaround".path}" ]
-        }
+        #   program = [ "sh", "-c", "${assets."hcloud_server_${module._identifier}_primary_ip_workaround".path}" ]
+        # }
       ''}
 
       ${builtins.concatStringsSep "\n" (map (volume: ''
@@ -529,7 +529,7 @@ in
 
         labels = {
           ${lib.optionalString (module.ipv4 != false && module.ipv6 != false) ''
-            "urknall.dev/primary-ip-workaround" : data.external.hcloud_server_${module._identifier}_primary_ip_workaround.result.text,
+            # "urknall.dev/primary-ip-workaround" : data.external.hcloud_server_${module._identifier}_primary_ip_workaround.result.text,
           ''}
           "urknall.dev/stage" : "${stage}",
           "urknall.dev/name" : "${module.name}"${lib.optionalString (module.labels != {}) ","}
