@@ -521,7 +521,7 @@ in
           ''}
         }
 
-        ${lib.optionalString (module.firewalls.length > 0) ''
+        ${lib.optionalString ((builtins.length module.firewalls) > 0) ''
           firewall_ids = [
               ${builtins.concatStringsSep "," (map (name: "hcloud_firewall.${name}.id") module.firewalls)}
           ]
