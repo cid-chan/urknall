@@ -102,13 +102,13 @@ let
       elif [[ -f "$1" && -d "$2" ]]; then
           return 0
       elif [[ -f "$1" && -f "$2" ]]; then
-          if ${localPkgs.diffutils}/bin/cmp "$1" "$2"; then
+          if ${localPkgs.diffutils}/bin/cmp "$1" "$2" >/dev/null; then
               return 1
           else
               return 0
           fi
       elif [[ -d "$1" && -d "$2" ]]; then
-          if ${localPkgs.diffutils}/bin/diff -qr "$1" "$2"; then
+          if ${localPkgs.diffutils}/bin/diff -qr "$1" "$2" >/dev/null; then
               return 1
           else
               return 0
@@ -132,7 +132,6 @@ let
             if compare_files "$STATE_UPDATE_DIR/${name}" "$STATE_TEMP_DIR/${name}"; then
               copy_maybe_recursive "$STATE_UPDATE_DIR/${name}" "$STATE_TEMP_DIR/${name}"
               encrypt_recursive_${toString value.sensitive} "$STATE_UPDATE_DIR/${name}" "$STATE_NEXT_DIR/${value.generation}-${name}"
-              cat "$STATE_NEXT_DIR/${value.generation}-${name}" || true
             fi
           ''}
         else
@@ -163,7 +162,7 @@ in
     ./storages
   ];
 
-  options = let inherit (lib) mkOption; inherit (lib.types) attrsOf submodule enum bool int str; in {
+  options = let inherit (lib) mkOption; inherit (lib.types) listOf attrsOf submodule enum bool int str; in {
     state.resultDirectory = mkOption {
       type = str;
       default = "$STAGE_DIR/state";
@@ -260,6 +259,13 @@ in
             '';
           };
 
+          before = mkOption {
+            type = listOf str;
+            default = [];
+            description = ''
+            '';
+          };
+
           sensitive = mkOption {
             type = bool;
             default = false;
@@ -276,6 +282,12 @@ in
             type = str;
             default = "";
             description = "Files with a different generation will get regenerated, regardless of whether they have already been created.";
+          };
+
+          inStagePath = mkOption {
+            type = str;
+            readOnly = true;
+            description = "The path, using a bash variable, "
           };
 
           path = mkOption {
