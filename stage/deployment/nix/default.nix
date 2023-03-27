@@ -149,7 +149,7 @@
 
       in
       lib.mkIf (config.deployments.nix != {}) ''
-        set -e
+        set -ex
         $(cat ${localPkgs.writeText "deployCommands" (builtins.concatStringsSep "\n" (map (c: "${c.deploy}") configs))})
         ${builtins.concatStringsSep "\n" (map (c: ''
           echo "Deploying NixOS ${c.name} to ${c.server.ip} (with user: ${c.server.user})"
