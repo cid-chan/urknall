@@ -149,8 +149,8 @@
 
       in
       lib.mkIf (config.deployments.nix != {}) ''
-        set -ex
-        $(cat ${localPkgs.writeText "deployCommands" (builtins.concatStringsSep "\n" (map (c: "${c.deploy}") configs))})
+        set -e
+        cat ${localPkgs.writeText "deployCommands" (builtins.concatStringsSep "\n" (map (c: "${c.deploy}") configs))} | ${localPkgs.parallel}/bin/parallel --verbose --linebuffer -j4 "${localPkgs.bash}/bin/bash -c {}"
         ${builtins.concatStringsSep "\n" (map (c: ''
           echo "Deploying NixOS ${c.name} to ${c.server.ip} (with user: ${c.server.user})"
           ${c.switch}
