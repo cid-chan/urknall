@@ -34,7 +34,7 @@
     };
 
     file = mkOption {
-      type = nullOr path;
+      type = nullOr (oneOf [ path str ]);
       description = ''
         The file to copy.
       '';
