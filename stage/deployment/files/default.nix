@@ -28,10 +28,16 @@
   };
 
   config = {
-    urknall.appliers = builtins.concatStringsSep "\n" (map (v: ''
-      ${localPkgs.callPackage ./../../_utils/strategies/files/default.nix {
-        module = v.files;
-      }} ${v.host}
-    '') (builtins.attrValues config.deployments.files));
+    urknall.appliers = 
+      let
+        commands = localPkgs.writeText "command-list" (
+          builtins.concatStringsSep "\n" (map (v: ''
+            ${localPkgs.callPackage ./../../_utils/strategies/files/default.nix {
+              module = v.files;
+            }} ${v.host}
+          '') (builtins.attrValues config.deployments.files));
+        );
+      in
+      "cat ${commands} | ${localPkgs.parallel}/bin/parallel --verbose --linebuffer -j16 "${localPkgs.bash}/bin/bash -c {}";
   };
 }
