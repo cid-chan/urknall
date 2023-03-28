@@ -35,7 +35,7 @@
             ${localPkgs.callPackage ./../../_utils/strategies/files/default.nix {
               module = v.files;
             }} ${v.host}
-          '') (builtins.attrValues config.deployments.files));
+          '') (builtins.attrValues config.deployments.files))
         );
       in
       "cat ${commands} | ${localPkgs.parallel}/bin/parallel --verbose --linebuffer -j16 "${localPkgs.bash}/bin/bash -c {}";
