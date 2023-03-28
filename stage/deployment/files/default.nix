@@ -28,7 +28,7 @@
   };
 
   config = {
-    urknall.appliers = 
+    urknall.appliers = lib.mkIf (config.deployments.files != {}) (
       let
         commands = localPkgs.writeText "command-list" (
           builtins.concatStringsSep "\n" (map (v: ''
@@ -40,6 +40,7 @@
       in
       ''
         cat ${commands} | ${localPkgs.parallel}/bin/parallel --verbose --linebuffer -j16 "${localPkgs.bash}/bin/bash -c {}"
-      '';
+      '' 
+    );
   };
 }
