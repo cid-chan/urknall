@@ -1,3 +1,4 @@
+{ lib, ... }:
 {
   config = lib.mkIf (config.state.storage.type == "none") {
     state.storage.pullCommand = "";
