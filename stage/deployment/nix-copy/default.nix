@@ -95,8 +95,7 @@
                 ${lib.optionalString (server.substituteOnDestination) "--use-substitutes"} \
                 --to ${server.target} ${toplevel}
               ''
-        ) config.deployments.nix;
-
+        )) config.deployments.nix-copy;
       in
       lib.mkIf (config.deployments.nix-copy != {}) (
         let
