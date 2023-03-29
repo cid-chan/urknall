@@ -374,7 +374,11 @@ in
         (lib.mkMerge (lib.mapAttrsToList (name: file:
           lib.mapAttrs' (k: v: {
             name = "content-${name}-${k}";
-            value = "${localPkgs.jq}/bin/jq -Rs . <${config.state.resultDirectory}/${name}${lib.optionalString (v.fileName != null) "/${v.fileName}"}";
+            value = 
+              let
+                filePath = "${config.state.resultDirectory}/${name}${lib.optionalString (v.fileName != null) "/${v.fileName}";
+              in
+              "[[ ! -e ${filePath} ]] || echo null && (${localPkgs.jq}/bin/jq -Rs . <${filePath})";
           }) file.resolve
         ) config.state.files))
         (lib.mapAttrs' (k: v: {
