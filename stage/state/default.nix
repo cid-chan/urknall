@@ -191,7 +191,7 @@ in
     };
 
     state.storage.type = mkOption {
-      type = enum [ "rsync" "git" ];
+      type = enum [ "rsync" "git" "none" ];
       default = "rsync";
       description = ''
         Where should the state be stored?
@@ -199,6 +199,7 @@ in
         Possible values:
         - rsync: Use rsync to synchronize the state. This can be used with SSH and local directories.
         - git: Use a git repository to track changes to the state.
+        - none: Commonly used for derived state. It will never save anything.
       '';
     };
 
