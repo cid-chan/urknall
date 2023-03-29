@@ -1,6 +1,6 @@
 { localPkgs, config, stages, stage, lib, ... }:
 {
-  options = let inherit (lib) mkOption; inherit (lib.types) raw attrsOf nullOr submodule str bool package; in {
+  options = let inherit (lib) mkOption; inherit (lib.types) raw listOf attrsOf nullOr submodule str bool package; in {
     deployments.nix-copy = mkOption {
       description = ''
         This deployment strategry deploys a NixOS System to a remote NixOS server.
