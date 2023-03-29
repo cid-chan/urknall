@@ -349,9 +349,9 @@ in
             };
 
           path = mkOption {
-            type = str;
+            type = nullOr str;
             readOnly = true;
-            description = "The path to the generated file.";
+            description = "The path to the generated file. If the file couldn't be found, it'll be null.";
             default = lib.mkFuture cstage "path-${config._module.args.name}";
           };
         };
