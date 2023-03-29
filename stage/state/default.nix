@@ -231,12 +231,13 @@ in
     };
 
     state.encryption.type = mkOption {
-      type = enum [ "age" "gpg" ];
+      type = enum [ "age" "gpg" "plain" ];
       description = ''
         How should sensitive data be encrypted?
         Possible values:
         - age: use age to encrypt and/or decrypt
         - gpg: use gpg to encrypt and/or decrypt
+        - plain: Don't encrypt. Usually a bad idea. DO NOT USE (except maybe with the none-storage)
       '';
     };
 
@@ -362,6 +363,11 @@ in
   };
 
   config = lib.mkIf (config.state.files != {}) {
+    state.encryption = lib.mkIf (config.state.encryption.type == "plain") {
+      encryptionCommand = "${localPkgs.coreutils}/bin/cp $1 $2";
+      decryptionCommand = "${localPkgs.coreutils}/bin/cp $1 $2";
+    };
+
     urknall.appliers = wrapPushPull commands;
 
     urknall.destroyers = wrapPushPull ''
