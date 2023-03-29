@@ -376,7 +376,7 @@ in
             name = "content-${name}-${k}";
             value = 
               let
-                filePath = "${config.state.resultDirectory}/${name}${lib.optionalString (v.fileName != null) "/${v.fileName}";
+                filePath = "${config.state.resultDirectory}/${name}${lib.optionalString (v.fileName != null) "/${v.fileName}"}";
               in
               "[[ ! -e ${filePath} ]] || echo null && (${localPkgs.jq}/bin/jq -Rs . <${filePath})";
           }) file.resolve
