@@ -171,6 +171,15 @@ in
             '';
           };
 
+          placementGroup = mkOption {
+            type = nullOr str;
+            default = null;
+            description = ''
+              The placement-group to join the server to.
+              May trigger a rebuild.
+            '';
+          };
+
           extraConfig = mkOption {
             type = lines;
             default = "";
@@ -525,6 +534,10 @@ in
           firewall_ids = [
               ${builtins.concatStringsSep "," (map (name: "hcloud_firewall.${name}.id") module.firewalls)}
           ]
+        ''}
+
+        ${lib.optionalString (module.placement-group != null) ''
+          placement_group_id = hcloud_placement_group.${module.placement-group}.id 
         ''}
 
         labels = {

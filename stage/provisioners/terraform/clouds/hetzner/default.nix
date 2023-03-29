@@ -9,6 +9,7 @@ in
     ./volumes.nix
     ./network.nix
     ./firewall.nix
+    ./placement-group.nix
   ];
 
   options = let inherit (lib) mkOption mkEnableOption; inherit (lib.types) nullOr str int lines; in {
