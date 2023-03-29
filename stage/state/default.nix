@@ -336,7 +336,7 @@ in
                     default = null;
                   };
 
-                  content = {
+                  content = mkOption {
                     type = str;
                     readOnly = true;
                     description = "The path to the generated file.";
