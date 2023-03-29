@@ -8,7 +8,7 @@ let
 in
 {
   options = let inherit (lib) mkOption; inherit (lib.types) attrsOf oneOf submodule str int nonEmptyListOf enum nullOr; in {
-    provisioners.terraform.clouds.hcloud.placement-group = mkOption {
+    provisioners.terraform.clouds.hcloud.placement-groups = mkOption {
       description = ''
         A set of Placement groups to create.
       '';
@@ -50,7 +50,7 @@ in
         name = "${group.name}"
         type = "${group.type}"
       }
-    '') cfg.placement-group);
+    '') cfg.placement-groups);
   };
 }
 
