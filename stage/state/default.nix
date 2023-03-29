@@ -181,7 +181,7 @@ in
     ./storages
   ];
 
-  options = let inherit (lib) mkOption; inherit (lib.types) listOf attrsOf submodule enum bool int str; in {
+  options = let inherit (lib) mkOption; inherit (lib.types) nullOr listOf attrsOf submodule enum bool int str; in {
     state.resultDirectory = mkOption {
       type = str;
       default = "$STAGE_DIR/state";
