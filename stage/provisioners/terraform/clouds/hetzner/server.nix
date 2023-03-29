@@ -536,14 +536,11 @@ in
           ]
         ''}
 
-        ${lib.optionalString (module.placement-group != null) ''
-          placement_group_id = hcloud_placement_group.${module.placement-group}.id 
+        ${lib.optionalString (module.placementGroup != null) ''
+          placement_group_id = hcloud_placement_group.${module.placementGroup}.id 
         ''}
 
         labels = {
-          ${lib.optionalString (module.ipv4 != false && module.ipv6 != false) ''
-            # "urknall.dev/primary-ip-workaround" : data.external.hcloud_server_${module._identifier}_primary_ip_workaround.result.text,
-          ''}
           "urknall.dev/stage" : "${stage}",
           "urknall.dev/name" : "${module.name}"${lib.optionalString (module.labels != {}) ","}
           ${builtins.concatStringsSep ",\n" (lib.mapAttrsToList (k: v: ''
