@@ -145,7 +145,7 @@
                     cp -a $(echo $STAGE_FILE_LOC | sed "s/;/ /g") $TEMP_FLAKE/resolves
                   fi
                 )
-                nix build "path:''${TEMP_FLAKE}#urknall-resolve.${localPkgs.system}.default.${operation}" --log-format internal-json --json --no-link -v "$@" | ${localPkgs.jq}/bin/jq -r '"\(.[0].outputs.out)"'
+                nix build "path:''${TEMP_FLAKE}#urknall-resolve.${localPkgs.system}.default.${operation}" --no-write-lock-file --log-format internal-json --json --no-link -v "$@" | ${localPkgs.jq}/bin/jq -r '"\(.[0].outputs.out)"'
                 EXITCODE=''${PIPESTATUS[0]}
                 rm -rf $TEMP_FLAKE
                 exit $EXITCODE
