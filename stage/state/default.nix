@@ -344,6 +344,7 @@ in
                   };
                 };
               }));
+              default = {};
               description = "Resolves the input of the files.";
             };
 
