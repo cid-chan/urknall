@@ -105,7 +105,7 @@
         ''
           set -e
           ${lib.concatStringsSep "\n" (lib.mapAttrsToList (keyFile: configs: ''
-            nix --experimental-features "nix-command" store sign -k ${keyFile} ${builtins.concatStringsSep " " (lib.flatten (map (c: c.derivations) configs))}
+            nix --experimental-features "nix-command" store sign -rk ${keyFile} ${builtins.concatStringsSep " " (lib.flatten (map (c: c.derivations) configs))}
           '') (builtins.groupBy (cfg: cfg.signingKeyFile) signedCopies))}
           cat ${localPkgs.writeText "deployCommands" (builtins.concatStringsSep "\n" (map (c: "${c}") configs))} | ${localPkgs.parallel}/bin/parallel --verbose --linebuffer -j4 "${localPkgs.bash}/bin/bash -c {}"
         ''
