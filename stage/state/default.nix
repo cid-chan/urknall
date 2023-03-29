@@ -340,7 +340,7 @@ in
                     type = str;
                     readOnly = true;
                     description = "The path to the generated file.";
-                    default = (s: builtins.trace s s) (lib.mkFuture cstage "content-${parentConfig._module.args.name}-${config._module.args.name}");
+                    default = lib.mkFuture cstage "content-${parentConfig._module.args.name}-${config._module.args.name}";
                   };
                 };
               }));
