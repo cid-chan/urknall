@@ -323,11 +323,35 @@ in
             default = "$RESULT_PATH/${config._module.args.name}";
           };
 
+          resolveContent =
+            let
+              parentConfig = config;
+            in
+            mkOption {
+              type = attrsOf (submodule ({ config, ... }: {
+                options = {
+                  fileName = mkOption {
+                    type = nullOr str;
+                    description = "If the generator created a directory, overwrite this to access a specific file.";
+                    default = null;
+                  };
+
+                  content = {
+                    type = str;
+                    readOnly = true;
+                    description = "The path to the generated file.";
+                    default = lib.mkFuture cstage "content-${parentConfig._module.args.name}-${config._module.args.name}";
+                  };
+                };
+              }));
+              description = "Resolves the input of the files.";
+            };
+
           path = mkOption {
             type = str;
             readOnly = true;
             description = "The path to the generated file.";
-            default = lib.mkFuture cstage config._module.args.name;
+            default = lib.mkFuture cstage "path-${config._module.args.name}";
           };
         };
       }));
@@ -344,9 +368,18 @@ in
 
     urknall.shell = wrapPush commands;
 
-    urknall.resolveCommands = lib.mapAttrs' (k: v: {
-      name = k;
-      value = "echo \\\"${config.state.resultDirectory}/${k}\\\"";
-    }) config.state.files;
+    urknall.resolveCommands =
+      lib.mkMerge [
+        (lib.mkMerge (lib.mapAttrsToList (name: file:
+          lib.mapAttrs' (k: v: {
+            name = "content-${name}-${k}";
+            value = "${localPkgs.jq}/bin/jq -Rs . <${config.state.resultDirectory}/${name}${lib.optionalString (v.fileName != null) "/${v.fileName}"}";
+          }) file.resolveFiles
+        ) config.state.files))
+        (lib.mapAttrs' (k: v: {
+          name = "path-${k}";
+          value = "echo \\\"${config.state.resultDirectory}/${k}\\\"";
+        }) config.state.files)
+      ];
   };
 }
