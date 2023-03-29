@@ -323,7 +323,7 @@ in
             default = "$RESULT_PATH/${config._module.args.name}";
           };
 
-          resolveContent =
+          resolve =
             let
               parentConfig = config;
             in
@@ -374,7 +374,7 @@ in
           lib.mapAttrs' (k: v: {
             name = "content-${name}-${k}";
             value = "${localPkgs.jq}/bin/jq -Rs . <${config.state.resultDirectory}/${name}${lib.optionalString (v.fileName != null) "/${v.fileName}"}";
-          }) file.resolveFiles
+          }) file.resolve
         ) config.state.files))
         (lib.mapAttrs' (k: v: {
           name = "path-${k}";
