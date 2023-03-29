@@ -378,7 +378,7 @@ in
               let
                 filePath = "${config.state.resultDirectory}/${name}${lib.optionalString (v.fileName != null) "/${v.fileName}"}";
               in
-              "{ [[ -e ${filePath} ]] && { ${localPkgs.jq}/bin/jq -Rs . <${filePath} } || echo null }";
+              "{ [[ -e ${filePath} ]] && { ${localPkgs.jq}/bin/jq -Rs . <${filePath}; } || echo null; }";
           }) file.resolve
         ) config.state.files))
         (lib.mapAttrs' (k: v: {
