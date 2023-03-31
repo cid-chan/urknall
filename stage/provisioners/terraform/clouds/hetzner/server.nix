@@ -420,22 +420,6 @@ in
         ''}
       '') (builtins.attrValues module.networks))}
 
-      ${lib.optionalString (module.ipv4 != false && module.ipv6 != false) ''
-        # resource "null_resource" "hcloud_server_${module._identifier}_primary_ip_workaround_bind_late" {
-        #   triggers = {
-        #     always_run = timestamp()
-        #   }
-        # }
-
-        # data "external" "hcloud_server_${module._identifier}_primary_ip_workaround" {
-        #   depends_on = [
-        #     null_resource.hcloud_server_${module._identifier}_primary_ip_workaround_bind_late
-        #   ]
-
-        #   program = [ "sh", "-c", "${assets."hcloud_server_${module._identifier}_primary_ip_workaround".path}" ]
-        # }
-      ''}
-
       ${builtins.concatStringsSep "\n" (map (volume: ''
         resource "hcloud_volume_attachment" "${module._identifier}_${volume}" {
           volume_id = hcloud_volume.${volume}.id
