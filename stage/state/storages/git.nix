@@ -11,7 +11,7 @@
 
   config = lib.mkIf (config.state.storage.type == "git") {
     state.storage.pullCommand = ''
-      PATH=$PATH:${lib.makeBinPath [localPkgs.openssh]} ${localPkgs.git}/bin/git clone ${lib.optionalString (config.stage.storage.git.shallow) "--depth 1"} "${config.state.storage.target}" "$STAGE_DIR/repo"
+      PATH=$PATH:${lib.makeBinPath [localPkgs.openssh]} ${localPkgs.git}/bin/git clone ${lib.optionalString (config.state.storage.git.shallow) "--depth 1"} "${config.state.storage.target}" "$STAGE_DIR/repo"
       sleep 1
       ${localPkgs.rsync}/bin/rsync -a --del --exclude ".git" "$STAGE_DIR/repo/" "$STATE_CURRENT_DIR/"
     '';
