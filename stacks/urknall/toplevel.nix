@@ -232,6 +232,7 @@ in
 
           stages)
             echo Found stages: ${builtins.concatStringsSep ", " config.urknall.stageList}
+            ;;
 
           *)
             echo Unknown operation "'$OPERATION'".
