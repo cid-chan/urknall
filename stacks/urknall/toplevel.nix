@@ -231,7 +231,7 @@ in
             ;;
 
           stages)
-            echo Found stages: ${builtins.concatStringsSep ", " config.urknall.stageList}
+            echo Found stages: ${builtins.concatStringsSep ", " (map (stage: stage.name) config.urknall.stageList)}
             ;;
 
           *)
