@@ -230,6 +230,9 @@ in
             exec ${config.urknall.build.shell} "$@"
             ;;
 
+          stages)
+            echo Found stages: ${builtins.concatStringsSep ", " config.urknall.stageList}
+
           *)
             echo Unknown operation "'$OPERATION'".
             echo "urknall [apply|destroy] [TARGET] [OPTIONS...]"
