@@ -56,6 +56,7 @@
               export PATH=${nixpkgs.lib.makeBinPath [
                 pkgs.bash 
                 pkgs.jq 
+                pkgs.openssh 
                 pkgs.git 
                 pkgs.coreutils
                 pkgs.util-linux
