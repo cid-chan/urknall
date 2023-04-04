@@ -130,13 +130,13 @@
             deploy = localPkgs.writeShellScript "deploy-${name}" ''
               PATH="${fakeSSH}/bin:$PATH" nix-copy-closure \
                 ${lib.optionalString (server.substituteOnDestination) "--use-substitutes"} \
-                --to ${server.user}@${server.ip} ${toplevel}
+                --gzip --to ${server.user}@${server.ip} ${toplevel}
             '';
 
             switch = ''
               PATH="${fakeSSH}/bin:$PATH" nix-copy-closure \
                 ${lib.optionalString (server.substituteOnDestination) "--use-substitutes"} \
-                --to ${server.user}@${server.ip} ${toplevel}
+                --gzip --to ${server.user}@${server.ip} ${toplevel}
 
               ${fakeSSH}/bin/ssh \
                 ${lib.optionalString (!server.checkHostKeys) "-oUserKnownHostsFile=/dev/null -oStrictHostKeyChecking=no"} \

@@ -93,7 +93,7 @@
               ''
               PATH="${fakeSSH}/bin:$PATH" nix-copy-closure \
                 ${lib.optionalString (server.substituteOnDestination) "--use-substitutes"} \
-                --to ${server.target} ${toplevel}
+                --gzip --to ${server.target} ${toplevel}
               ''
         )) config.deployments.nix-copy;
       in
