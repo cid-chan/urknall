@@ -106,7 +106,7 @@
           ${lib.concatStringsSep "\n" (lib.mapAttrsToList (keyFile: configs: ''
             nix --experimental-features "nix-command" store sign -rk ${keyFile} ${builtins.concatStringsSep " " (lib.flatten (map (c: c.derivations) configs))}
           '') (builtins.groupBy (cfg: cfg.signingKeyFile) signedCopies))}
-          cat ${localPkgs.writeText "deployCommands" (builtins.concatStringsSep "\n" (map (c: "${c}") configs))} | ${localPkgs.parallel}/bin/parallel --verbose --linebuffer -j${config.deployments.concurrency} "${localPkgs.bash}/bin/bash -c {}"
+          cat ${localPkgs.writeText "deployCommands" (builtins.concatStringsSep "\n" (map (c: "${c}") configs))} | ${localPkgs.parallel}/bin/parallel --verbose --linebuffer -j${toString config.deployments.concurrency} "${localPkgs.bash}/bin/bash -c {}"
         ''
       );
   };
