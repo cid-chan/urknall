@@ -39,7 +39,7 @@
         );
       in
       ''
-        cat ${commands} | ${localPkgs.parallel}/bin/parallel --verbose --linebuffer -j16 "${localPkgs.bash}/bin/bash -c {}"
+        cat ${commands} | ${localPkgs.parallel}/bin/parallel --verbose --linebuffer -j${config.deployments.concurrency} "${localPkgs.bash}/bin/bash -c {}"
       '' 
     );
   };
