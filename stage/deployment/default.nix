@@ -7,7 +7,7 @@
     ./files
   ];
 
-  options = let inherit (lib) mkOption; inherit (lib.types) int; {
+  options = let inherit (lib) mkOption; inherit (lib.types) int; in {
     deployments.concurrency = mkOption {
       description = lib.mdDoc ''
         How many parallel uploads should be performed?
