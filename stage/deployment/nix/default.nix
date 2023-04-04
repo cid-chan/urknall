@@ -1,6 +1,6 @@
 { localPkgs, config, stages, stage, lib, ... }:
 {
-  options = let inherit (lib) mkOption; inherit (lib.types) raw attrsOf enum submodule str bool; in {
+  options = let inherit (lib) mkOption; inherit (lib.types) raw listOf attrsOf enum submodule str bool; in {
     deployments.nix = mkOption {
       description = ''
         This deployment strategry deploys a NixOS System to a remote NixOS server.
@@ -97,6 +97,14 @@
               The NixOS Configuration to deploy.
             '';
           };
+
+          postActivationCommands = mkOption {
+            type = listOf str;
+            default = [];
+            description = lib.mdDoc ''
+              Run these commands after activation.
+            '';
+          };
         };
       }));
       default = {};
@@ -143,6 +151,15 @@
                 -- \
                 ${lib.optionalString (server.useRemoteSudo) "sudo"} \
                 ${toplevel}/bin/switch-to-configuration ${server.applyMode}
+
+              ${builtins.concatStringsSep "\n" (map (cmd: ''
+                ${fakeSSH}/bin/ssh \
+                  ${lib.optionalString (!server.checkHostKeys) "-oUserKnownHostsFile=/dev/null -oStrictHostKeyChecking=no"} \
+                  ${server.user}@${server.ip} \
+                  -- \
+                  ${lib.optionalString (server.useRemoteSudo) "sudo"} \
+                  ${cmd}
+              '') server.postActivationCommands)}
             '';
           }
         ) config.deployments.nix;
