@@ -1,4 +1,4 @@
-{ ... }:
+{ lib, ... }:
 {
   imports = [
     ./nix
@@ -7,7 +7,7 @@
     ./files
   ];
 
-  options = {
+  options = let inherit (lib) mkOption; inherit (lib.types) int; {
     deployments.concurrency = mkOption {
       description = lib.mdDoc ''
         How many parallel uploads should be performed?
