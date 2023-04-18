@@ -30,10 +30,10 @@ in
           };
 
           serverType = mkOption {
-            type = enum [
+            type = enum ([
               "cx11" "cpx11" "cx21" "cpx21" "cx31" "cpx31" "cx41" "cpx41" "cx51" "cpx51"              # Shared Resources
               "ccx11" "ccx12" "ccx21" "ccx22" "ccx31" "ccx32" "ccx41" "ccx42" "ccx51" "ccx52" "ccx52" # Dedicated Resources
-            ] ++ armTypes;
+            ] ++ armTypes);
             default = "cx11";
             description = ''
               The server tier that is used to create the server.
