@@ -2,19 +2,29 @@
 let
   stage = config.stage.name;
   cfg = config.provisioners.packer.hcloud;
+
+  armTypes = [
+    "cax11" "cax21" "cax31" "cax41"
+  ];
 in
 {
   options = let inherit (lib) mkOption; inherit (lib.types) attrsOf submodule enum str package int; in {
     provisioners.packer.hcloud = mkOption {
       type = attrsOf (submodule ({ config, ... }: {
         imports = [
-          (import ./../../../_utils/strategies/rescue/submodule.nix { system = "x86_64-linux"; })
+          (import ./../../../_utils/strategies/rescue/submodule.nix { 
+            system = 
+              if  (builtins.elem config.serverType armTypes) then
+                "aarch64-linux"
+              else
+                "x86_64-linux"; 
+          })
         ];
         options = {
           location = mkOption {
             type = enum [ "nbg1" "fsn1" "hel1" "ash" ];
             default = "nbg1";
-            description = ''
+            description = lib.mkDoc ''
               The datacenter to place the module in.
             '';
           };
@@ -23,7 +33,7 @@ in
             type = enum [
               "cx11" "cpx11" "cx21" "cpx21" "cx31" "cpx31" "cx41" "cpx41" "cx51" "cpx51"              # Shared Resources
               "ccx11" "ccx12" "ccx21" "ccx22" "ccx31" "ccx32" "ccx41" "ccx42" "ccx51" "ccx52" "ccx52" # Dedicated Resources
-            ];
+            ] ++ armTypes;
             default = "cx11";
             description = ''
               The server tier that is used to create the server.

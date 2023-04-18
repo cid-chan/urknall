@@ -57,6 +57,9 @@ let
       }) fileEntries;
     in
     builtins.listToAttrs renames;
+
+
+  armTypes = [ "cax11" "cax21" "cax31" "cax41" ];
 in
 {
   options = let inherit (lib) mkOption; inherit (lib.types) attrsOf submodule listOf nullOr anything enum str oneOf bool lines int; in {
@@ -100,7 +103,7 @@ in
             type = enum [ 
               "cx11" "cpx11" "cx21" "cpx21" "cx31" "cpx31" "cx41" "cpx41" "cx51" "cpx51"              # Shared Resources
               "ccx11" "ccx12" "ccx21" "ccx22" "ccx31" "ccx32" "ccx41" "ccx42" "ccx51" "ccx52" "ccx52" # Dedicated Resources
-            ];
+            ] ++ armTypes;
             description = ''
               The instance type.
             '';
@@ -142,7 +145,13 @@ in
           };
 
           system = mkOption {
-            type = nullOr (submodule (import ./../../../../_utils/strategies/rescue/submodule.nix { system = "x86_64-linux"; }));
+            type = nullOr (submodule (import ./../../../../_utils/strategies/rescue/submodule.nix { 
+              system = 
+                if  (builtins.elem config.type armTypes) then
+                  "aarch64-linux"
+                else
+                  "x86_64-linux"; 
+            }));
             default = null;
             description = ''
               Install this NixOS System.
@@ -557,6 +566,8 @@ in
           ${lib.optionalString (module.generation != "") ''
             generation = "${module.generation}"
           ''}
+
+          server_type = "${module.type}"
         }
       }
     '') cfg.servers);
