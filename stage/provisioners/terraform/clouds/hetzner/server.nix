@@ -564,10 +564,8 @@ in
             volumes = "${builtins.concatStringsSep " " (map (vol: lib.urknall.variable "hcloud_volume.${vol}.id") module.volumes)}"
           ''}
           ${lib.optionalString (module.generation != "") ''
-            generation = "${module.generation}"
+            generation = "${module.generation}--${module.type}"
           ''}
-
-          server_type = "${module.type}"
         }
       }
     '') cfg.servers);
