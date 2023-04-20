@@ -41,14 +41,14 @@
   };
 
   config = {
-    kexec.config = {modulesPath, pkgs, ...}: {
+    kexec.config = { modulesPath, config, pkgs, ... }: {
       imports = [
         lib.urknall.urknall-inputs.nixos-generators.nixosModules.kexec-bundle
         "${modulesPath}/profiles/minimal.nix"
       ];
 
       config = {
-        system.build.kexec_tarball_2 = lib.mkOverride 0 (pkgs.callPackage "${modulesPath}/lib/make-system-tarball.nix" {
+        system.build.kexec_tarball_2 = lib.mkOverride 0 (pkgs.callPackage "${modulesPath}/../lib/make-system-tarball.nix" {
           storeContents = [
             { object = config.system.build.kexec_script; symlink = "/kexec_nixos"; }
           ];
