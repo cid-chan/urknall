@@ -48,7 +48,7 @@ writeShellScript "provision" ''
     sleep 10
 
     # Wait for the kexec'd rescue system to come online.
-    while ! sh root@$IPADDR -- test -e /run/current-system/sw/is_kexec; do
+    while ! ssh root@$IPADDR -- test -e /run/current-system/sw/is_kexec; do
       echo "Not kexec."
       ssh root@$IPADDR -- ls /run/current-system/sw || true
       sleep 1
