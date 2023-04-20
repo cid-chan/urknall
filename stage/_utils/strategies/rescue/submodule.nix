@@ -48,6 +48,12 @@
       ];
 
       config = {
+        system.build.kexec_tarball = lib.mkForce (pkgs.callPackage "${lib.urknall.urknall-inputs.nixpkgs.outPath}/nixos/lib/make-system-tarball.nix" {
+          storeContents = [
+            { object = config.system.build.kexec_script; symlink = "/kexec_nixos"; }
+          ];
+          contents = [];
+        });
         system.extraDependencies = lib.mkOverride 70 [];
         networking.wireless.enable = lib.mkOverride 500 false;
         hardware.enableRedistributableFirmware = lib.mkOverride 70 false;
