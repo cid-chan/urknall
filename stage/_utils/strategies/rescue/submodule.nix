@@ -56,7 +56,7 @@
         });
         kexec_bundle = pkgs.runCommand "kexec_bundle" {} ''
           cat \
-            ${kexec_tarball_self_extract_script} \
+            ${config.system.build.kexec_tarball_self_extract_script} \
             ${config.system.build.kexec_tarball_2}/tarball/nixos-system-${config.system.build.kexec_tarball_2.system}.tar.xz \
             > $out
           chmod +x $out
