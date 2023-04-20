@@ -45,8 +45,12 @@ writeShellScript "provision" ''
     scp ${module.kexec.config.config.system.build.kexec_bundle_2} root@$ESC_IPADDR:/root/kexec
     ssh root@$IPADDR -- /root/kexec &
 
+    sleep 10
+
     # Wait for the kexec'd rescue system to come online.
-    while ! ssh root@$IPADDR -- test -e /run/current-system; do
+    while ! sh root@$IPADDR -- test -e /run/current-system/sw/is_kexec; do
+      echo "Not kexec."
+      ssh root@$IPADDR -- ls /run/current-system/sw || true
       sleep 1
     done
 
