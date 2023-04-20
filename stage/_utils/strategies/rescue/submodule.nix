@@ -54,7 +54,7 @@
           ];
           contents = [];
         });
-        kexec_bundle = pkgs.runCommand "kexec_bundle" {} ''
+        system.build.kexec_bundle = pkgs.runCommand "kexec_bundle" {} ''
           cat \
             ${config.system.build.kexec_tarball_self_extract_script} \
             ${config.system.build.kexec_tarball_2}/tarball/nixos-system-${config.system.build.kexec_tarball_2.system}.tar.xz \
