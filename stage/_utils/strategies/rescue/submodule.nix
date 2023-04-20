@@ -61,7 +61,7 @@
             > $out
           chmod +x $out
         '');
-        environment.postBuild = "echo > $out/is_kexec";
+        environment.extraSetup = "echo > $out/is_kexec";
         system.extraDependencies = lib.mkOverride 70 [];
         networking.wireless.enable = lib.mkOverride 500 false;
         hardware.enableRedistributableFirmware = lib.mkOverride 70 false;
