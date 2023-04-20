@@ -48,12 +48,19 @@
       ];
 
       config = {
-        system.build.kexec_tarball = lib.mkOverride 0 (pkgs.callPackage "${modulesPath}/lib/make-system-tarball.nix" {
+        system.build.kexec_tarball_2 = lib.mkOverride 0 (pkgs.callPackage "${modulesPath}/lib/make-system-tarball.nix" {
           storeContents = [
             { object = config.system.build.kexec_script; symlink = "/kexec_nixos"; }
           ];
           contents = [];
         });
+        kexec_bundle = pkgs.runCommand "kexec_bundle" {} ''
+          cat \
+            ${kexec_tarball_self_extract_script} \
+            ${config.system.build.kexec_tarball_2}/tarball/nixos-system-${config.system.build.kexec_tarball_2.system}.tar.xz \
+            > $out
+          chmod +x $out
+        '';
         system.extraDependencies = lib.mkOverride 70 [];
         networking.wireless.enable = lib.mkOverride 500 false;
         hardware.enableRedistributableFirmware = lib.mkOverride 70 false;
