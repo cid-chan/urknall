@@ -41,7 +41,7 @@
   };
 
   config = {
-    kexec.config = {modulesPath, ...}: {
+    kexec.config = {modulesPath, pkgs, ...}: {
       imports = [
         lib.urknall.urknall-inputs.nixos-generators.nixosModules.kexec-bundle
         "${modulesPath}/profiles/minimal.nix"
