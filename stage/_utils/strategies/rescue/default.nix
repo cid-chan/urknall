@@ -41,8 +41,8 @@ writeShellScript "provision" ''
 
   ${lib.optionalString (module.kexec.enable) ''
     # Push the kexec-bundle to the remote system.
-    echo Uploading kexec_bundle from ${module.kexec.config.config.system.build.kexec_bundle}
-    scp ${module.kexec.config.config.system.build.kexec_bundle} root@$ESC_IPADDR:/root/kexec
+    echo Uploading kexec_bundle from ${module.kexec.config.config.system.build.kexec_bundle_2}
+    scp ${module.kexec.config.config.system.build.kexec_bundle_2} root@$ESC_IPADDR:/root/kexec
     ssh root@$IPADDR -- /root/kexec &
 
     # Wait for the kexec'd rescue system to come online.
