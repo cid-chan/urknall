@@ -4,7 +4,7 @@
   options = let inherit (lib) mkOption; inherit (lib.types) attrsOf submodule raw bool nullOr; in {
     drives = mkOption {
       type = attrsOf (submodule (import ./../_partitioner/submodule.nix));
-      description = ''
+      description = lib.mdDoc ''
         Drives to install.
       '';
     };
@@ -12,7 +12,7 @@
     direct = mkOption {
       type = bool;
       default = true;
-      description = ''
+      description = lib.mdDoc ''
         Copy the store directly to the target partition.
         Setting this to false automatically substitutes on remote.
       '';
@@ -23,7 +23,7 @@
       type = lib.types.nixosConfigWith {
         inherit system;
       };
-      description = ''
+      description = lib.mdDoc ''
         A nixos-system that is used as a rescue system.
 
         It works by kexec'ing a nixos-image and using it to install nixos over ssh.
@@ -34,7 +34,7 @@
       type = lib.types.nixosConfigWith {
         inherit system;
       };
-      description = ''
+      description = lib.mdDoc ''
         The nixos-system to build
       '';
     };
@@ -48,7 +48,7 @@
       ];
 
       config = {
-        system.build.kexec_tarball = lib.mkForce (pkgs.callPackage "${lib.urknall.urknall-inputs.nixpkgs.outPath}/nixos/lib/make-system-tarball.nix" {
+        system.build.kexec_tarball = lib.mkOverride 0 (pkgs.callPackage "${modulesPath}/lib/make-system-tarball.nix" {
           storeContents = [
             { object = config.system.build.kexec_script; symlink = "/kexec_nixos"; }
           ];
