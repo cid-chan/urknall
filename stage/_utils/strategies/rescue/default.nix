@@ -40,21 +40,23 @@ writeShellScript "provision" ''
   done
 
   ${lib.optionalString (module.kexec.enable) ''
-    # Push the kexec-bundle to the remote system.
-    echo Uploading kexec_bundle from ${module.kexec.config.config.system.build.kexec_bundle_2}
-    scp ${module.kexec.config.config.system.build.kexec_bundle_2} root@$ESC_IPADDR:/root/kexec
-    ssh root@$IPADDR -- /root/kexec &
+    if ! ssh root@$IPADDR -- test -e /run/current-system/sw/is_kexec ; then
+      # Push the kexec-bundle to the remote system.
+      echo Uploading kexec_bundle from ${module.kexec.config.config.system.build.kexec_bundle_2}
+      scp ${module.kexec.config.config.system.build.kexec_bundle_2} root@$ESC_IPADDR:/root/kexec
+      ssh root@$IPADDR -- /root/kexec &
 
-    sleep 10
+      sleep 10
 
-    # Wait for the kexec'd rescue system to come online.
-    while ! ssh root@$IPADDR -- test -e /run/current-system/sw/is_kexec; do
-      echo "Not kexec."
-      ssh root@$IPADDR -- ls /run/current-system/sw || true
-      sleep 1
-    done
+      # Wait for the kexec'd rescue system to come online.
+      while ! ssh root@$IPADDR -- test -e /run/current-system/sw/is_kexec; do
+        echo "Not kexec."
+        ssh root@$IPADDR -- ls /run/current-system/sw || true
+        sleep 1
+      done
 
-    kill %1
+      kill %1
+    fi
   ''}
 
   # Install Nix
