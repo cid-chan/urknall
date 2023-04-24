@@ -62,13 +62,17 @@ writeShellScript "provision" ''
     fi
   ''}
 
+  function copyClosureSafe() {
+    nix-copy-closure --to root@$IPADDR $1 -s || (nix-store --export $(nix-store -qR $1) | ssh root@$IPADDR -- nix-store --import) || exit 1
+  }
+
   # Install Nix
   runScript ${./rescue.sh} rescue.sh
 
   # Build the important scripts
-  nix-copy-closure --to root@$IPADDR ${partition.mount} -s
-  nix-copy-closure --to root@$IPADDR ${partition.format} -s
-  nix-copy-closure --to root@$IPADDR ${nix} -s
+  copyClosureSafe ${nix}
+  copyClosureSafe ${partition.mount}
+  copyClosureSafe ${partition.format}
 
   # Transfer the helper file
   ${partition.upload "ssh root@$IPADDR" (src: dst: "scp \"${src}\" \"root@$IPADDR:${dst}\"")}
