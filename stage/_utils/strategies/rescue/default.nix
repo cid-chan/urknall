@@ -49,7 +49,7 @@ writeShellScript "provision" ''
         # Push the kexec-bundle to the remote system.
         echo Uploading kexec_bundle from ${bundle}
 
-        if ! ssh root@$IPADDR -- bash -c 'echo ${builtins.hashFile "sha256" bundle} /root/kexec' | sha256sum --check --status' ; then
+        if ! ssh root@$IPADDR -- sh -c 'echo "${builtins.hashFile "sha256" bundle} /root/kexec" | sha256sum --check --status' ; then
           scp ${bundle} root@$ESC_IPADDR:/root/kexec
         fi
         ssh root@$IPADDR -- /root/kexec &
