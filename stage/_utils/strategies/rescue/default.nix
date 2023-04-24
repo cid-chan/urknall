@@ -84,8 +84,7 @@ writeShellScript "provision" ''
     if module.direct then ''
       nix-store --export $(nix-store -qR ${system}) | ssh root@$IPADDR -- ${nix}/bin/nix-store --store /mnt --import
     '' else ''
-      mkdir -p /mnt/nix/store
-      nix-copy-closure --to root@$IPADDR ${system} -s
+      copyClosureSafe ${system}
       ssh root@$IPADDR -- ${nix}/bin/nix --experimental-features nix-command copy --to /mnt ${system} --no-check-sigs
     ''
   }
