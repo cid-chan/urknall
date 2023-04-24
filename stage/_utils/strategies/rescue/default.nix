@@ -40,28 +40,33 @@ writeShellScript "provision" ''
     sleep 1
   done
 
-  ${lib.optionalString (module.kexec.enable) ''
-    if ! ssh root@$IPADDR -- test -e /run/current-system/sw/is_kexec ; then
-      # Push the kexec-bundle to the remote system.
-      echo Uploading kexec_bundle from ${module.kexec.config.config.system.build.kexec_bundle_2}
+  ${lib.optionalString (module.kexec.enable) (
+    let
+      bundle = module.kexec.config.config.system.build.kexec_bundle_2;
+    in
+    ''
+      if ! ssh root@$IPADDR -- test -e /run/current-system/sw/is_kexec ; then
+        # Push the kexec-bundle to the remote system.
+        echo Uploading kexec_bundle from ${bundle}
 
-      if ! ssh root@$IPADDR -- test -e /root/kexec ; then
-        scp ${module.kexec.config.config.system.build.kexec_bundle_2} root@$ESC_IPADDR:/root/kexec
+        if ! ssh root@$IPADDR -- bash -c 'echo ${builtins.hashFile "sha256" bundle} /root/kexec' | sha256sum --check --status' ; then
+          scp ${bundle} root@$ESC_IPADDR:/root/kexec
+        fi
+        ssh root@$IPADDR -- /root/kexec &
+
+        sleep 10
+
+        # Wait for the kexec'd rescue system to come online.
+        while ! ssh root@$IPADDR -- test -e /run/current-system/sw/is_kexec; do
+          echo "Not kexec."
+          ssh root@$IPADDR -- ls /run/current-system/sw || true
+          sleep 1
+        done
+
+        kill %1
       fi
-      ssh root@$IPADDR -- /root/kexec &
-
-      sleep 10
-
-      # Wait for the kexec'd rescue system to come online.
-      while ! ssh root@$IPADDR -- test -e /run/current-system/sw/is_kexec; do
-        echo "Not kexec."
-        ssh root@$IPADDR -- ls /run/current-system/sw || true
-        sleep 1
-      done
-
-      kill %1
-    fi
-  ''}
+    ''
+  )}
 
   function copyClosureSafe() {
     nix-copy-closure --to root@$IPADDR $1 -s || (nix-store --export $(nix-store -qR $1) | ssh root@$IPADDR -- nix-store --import) || exit 1
