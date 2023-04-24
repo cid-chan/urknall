@@ -45,6 +45,8 @@ if ! command -v curl; then
               ;;
             "-L")
               ;;
+            "-k")
+              ;;
             *)
               echo "$arg"
               ;;
@@ -64,7 +66,7 @@ mkdir -p /etc/nix
 echo "build-users-group =" > /etc/nix/nix.conf
 
 echo '=====> Installing nix <====='
-curl -L https://nixos.org/nix/install | sh
+curl -k -L https://nixos.org/nix/install | sh
 . $HOME/.nix-profile/etc/profile.d/nix.sh
 ln -sf $(realpath $(which nix-store)) /bin/nix-store
 ln -sf $(realpath $(which nix-env)) /bin/nix-env
