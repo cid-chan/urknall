@@ -43,7 +43,10 @@ writeShellScript "provision" ''
     if ! ssh root@$IPADDR -- test -e /run/current-system/sw/is_kexec ; then
       # Push the kexec-bundle to the remote system.
       echo Uploading kexec_bundle from ${module.kexec.config.config.system.build.kexec_bundle_2}
-      scp ${module.kexec.config.config.system.build.kexec_bundle_2} root@$ESC_IPADDR:/root/kexec
+
+      if ! ssh root@$IPADDR -- test -e /root/kexec ; then
+        scp ${module.kexec.config.config.system.build.kexec_bundle_2} root@$ESC_IPADDR:/root/kexec
+      fi
       ssh root@$IPADDR -- /root/kexec &
 
       sleep 10
