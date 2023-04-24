@@ -21,7 +21,7 @@ writeShellScript "provision" ''
   fi
 
   export SSH_KEY="$(realpath "$2")"
-  export PATH=${(callPackage ./../../ssh.nix { debug = true; }).path}:$PATH
+  export PATH=${(callPackage ./../../ssh.nix {}).path}:$PATH
   export SHELL=/bin/sh
 
   runScript() {
