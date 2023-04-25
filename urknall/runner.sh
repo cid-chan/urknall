@@ -61,6 +61,9 @@ fi
 export URKNALL_ROOT_DIR=$(mktemp -d)
 export URKNALL_LOCAL_DIRECTORY="$PWD"
 
+# Fix a bug about nix-copy-closure failing when the wrong shell is set.
+export SHELL=/bin/sh
+
 # Run the actual script
 $RUNNER $OPERATION $RUNNER_ARGS "$@"
 
