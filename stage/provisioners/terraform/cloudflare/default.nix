@@ -19,7 +19,7 @@ in
 
       tokenCommand = mkOption {
         type = nullOr str;
-        description = ''
+        description = lib.mkDoc ''
           The command that yields the token.
         '';
         default = null;
@@ -27,13 +27,13 @@ in
 
       provider = {
         retries = optionalInt {
-          description = ''
+          description = lib.mkDoc ''
             Maximum retries when an API request fails.
           '';
         };
 
         rps = optionalInt {
-          description = ''
+          description = lib.mkDoc ''
             Maximum requests per second when making calls to the API
           '';
         };

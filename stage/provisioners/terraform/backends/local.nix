@@ -6,7 +6,7 @@ in
   options = let inherit (lib) mkOption; inherit (lib.types) nullOr str; in {
     provisioners.terraform.backend.local.statePath = mkOption {
       type = str;
-      description = "The path to the state file.";
+      description = lib.mkDoc "The path to the state file.";
       default = 
         if cfg.project.homePath != null then
           cfg.project.homePath  + "/state"

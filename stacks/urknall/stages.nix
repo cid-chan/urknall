@@ -21,14 +21,14 @@ in
             type = str;
             readOnly = true;
             default = config._module.args.name;
-            description = ''
+            description = lib.mdDoc ''
               The name given to the stage. Differs from the currently active stage!
             '';
           };
           stage.after = mkOption {
             type = listOf str;
             default = [];
-            description = ''
+            description = lib.mdDoc ''
               Queue the stage after the current one.
             '';
           };
@@ -36,7 +36,7 @@ in
           stage.before = mkOption {
             type = listOf str;
             default = [];
-            description = ''
+            description = lib.mdDoc ''
               Make sure that the stages noted here run after the current one.
             '';
           };

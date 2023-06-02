@@ -13,14 +13,14 @@ in
     label = mkOption {
       type = str;
       default = config._module.args.name;
-      description = ''
+      description = lib.mdDoc ''
         The name of the server.
       '';
     };
 
     drive = mkOption {
       type = str;
-      description = ''
+      description = lib.mdDoc ''
         The drive to put the partition on.
         If the drive is a bind-mount, this defines the bind folder.
       '';
@@ -28,7 +28,7 @@ in
 
     size = mkOption {
       type = nullOr str;
-      description = ''
+      description = lib.mdDoc ''
         The size of the partition.
         Tmpfs can only suffixed sizes.
         Everything else is managed by gparted.
@@ -41,7 +41,7 @@ in
     temporary-files = mkOption {
       type = attrsOf str;
       default = {};
-      description = ''
+      description = lib.mdDoc ''
         Extra files that should be pushed to the remote server.
         These files will not be part of the original closure.
       '';
@@ -50,7 +50,7 @@ in
     extras = mkOption {
       type = attrsOf anything;
       default = {};
-      description = ''
+      description = lib.mdDoc ''
         Extra configuration options for different partitioning types.
       '';
     };
@@ -58,7 +58,7 @@ in
     reformat = mkOption {
       type = bool;
       default = true;
-      description = ''
+      description = lib.mdDoc ''
         If the partition type is already matching,
         and it's label matches the label given to it,
         and the drive has no partition-table,
@@ -69,14 +69,14 @@ in
 
     fsType = mkOption {
       type = enum [ "ext2" "ext3" "ext4" "btrfs" "tmpfs" "bind" "swap" "fat" "luks" "none" ];
-      description = ''
+      description = lib.mdDoc ''
         The filesystem type.
       '';
     };
 
     partitionType = mkOption {
       type = enum [ "efi" "swap" "linux" "none"];
-      description = ''
+      description = lib.mdDoc ''
         Defines the partition type.
         It is usually automatically detected by the used filesystem.
       '';
@@ -84,7 +84,7 @@ in
 
     mountPoint = mkOption {
       type = nullOr str;
-      description = ''
+      description = lib.mdDoc ''
         Defines where the partition should be mounted.
         Omit this option if this is a swap partition.
       '';

@@ -9,7 +9,7 @@
         options = {
           target = mkOption {
             type = str;
-            description = ''
+            description = lib.mdDoc ''
               The target store to copy to.
             '';
           };
@@ -17,7 +17,7 @@
           substituteOnDestination = mkOption {
             type = bool;
             default = false;
-            description = ''
+            description = lib.mdDoc ''
               Substitute on the remote server.
             '';
           };
@@ -25,7 +25,7 @@
           checkHostKeys = mkOption {
             type = bool;
             default = true;
-            description = ''
+            description = lib.mdDoc ''
               Check host keys when connecting to the server.
             '';
           };
@@ -33,22 +33,22 @@
           signingKeyFile = mkOption {
             type = nullOr str;
             default = null;
-            description = ''
+            description = lib.mdDoc ''
               If null, the derivations will be signed before uploading.
             '';
           };
 
           noCheckSigs = mkOption {
             type = nullOr str;
-            default = config.user == "root";
-            description = ''
+            default = false;
+            description = lib.mdDoc ''
               Check if valid signatures are on the remote store path.
             '';
           };
 
           derivations = mkOption {
             type = listOf package;
-            description = ''
+            description = lib.mdDoc ''
               The derivations to pusb
             '';
           };
@@ -56,7 +56,7 @@
           v3 = mkOption {
             type = bool;
             default = false;
-            description = ''
+            description = lib.mdDoc ''
               Use nix copy instead of nix-copy-closure to upload the derivations.
             '';
           };

@@ -12,7 +12,7 @@ in
       type = mkOption {
         type = enum [ "local" "cloud" ];
         default = "local";
-        description = ''
+        description = lib.mkDoc ''
           What backend should terraform use?
 
           When using cloud, make sure the Execution Mode is set to "Local".
@@ -22,7 +22,7 @@ in
       terraformBlock = mkOption {
         type = lines;
         default = "";
-        description = ''
+        description = lib.mkDoc ''
           Lines within the terraform block.
         '';
       };
@@ -37,21 +37,21 @@ in
             name = mkOption {
               type = str;
               default = config._module.args.name;
-              description = ''
+              description = lib.mkDoc ''
                 The name of the private key.
               '';
             };
 
             source = mkOption {
               type = str;
-              description = ''
+              description = lib.mkDoc ''
                 The source of the provider.
               '';
             };
 
             version = mkOption {
               type = str;
-              description = ''
+              description = lib.mkDoc ''
                 The version of the provider.
               '';
             };

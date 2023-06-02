@@ -6,7 +6,7 @@ in
   options = let inherit (lib) mkOption; inherit (lib.types) listOf nullOr submodule bool package str; in {
     urknall.stateVersion = mkOption {
       type = nullOr str;
-      description = ''
+      description = lib.mdDoc ''
         The stateVersion defines when the project was first created.
         You should set this value once,
         namely at the start of the project.
@@ -36,7 +36,7 @@ in
       type = listOf (submodule ({ options = {
         condition = mkOption {
           type = bool;
-          description = ''
+          description = lib.mdDoc ''
             The condition to check.
 
             If the condition evaluates to true,
@@ -46,7 +46,7 @@ in
         };
         message = mkOption {
           type = str;
-          description = ''
+          description = lib.mdDoc ''
             The message to print out.
           '';
         };
@@ -61,7 +61,7 @@ in
       type = listOf (submodule ({ options = {
         condition = mkOption {
           type = bool;
-          description = ''
+          description = lib.mdDoc ''
             The condition to check.
 
             If the condition evaluates to true,
@@ -70,7 +70,7 @@ in
         };
         message = mkOption {
           type = str;
-          description = ''
+          description = lib.mdDoc ''
             The message to print out.
           '';
         };

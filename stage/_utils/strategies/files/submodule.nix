@@ -4,7 +4,7 @@
     path = mkOption {
       type = str;
       default = config._module.args.name;
-      description = ''
+      description = lib.mdDoc ''
         The name of the server.
       '';
     };
@@ -12,7 +12,7 @@
     user = mkOption {
       type = str;
       default = "root";
-      description = ''
+      description = lib.mdDoc ''
         The user that should own the file.
       '';
     };
@@ -20,7 +20,7 @@
     group = mkOption {
       type = str;
       default = "root";
-      description = ''
+      description = lib.mdDoc ''
         The group that should own the file.
       '';
     };
@@ -28,14 +28,14 @@
     mode = mkOption {
       default = "0644";
       type = str;
-      description = ''
+      description = lib.mdDoc ''
         The mode that the file should have.
       '';
     };
 
     file = mkOption {
       type = nullOr (oneOf [ path str ]);
-      description = ''
+      description = lib.mdDoc ''
         The file to copy.
       '';
     };

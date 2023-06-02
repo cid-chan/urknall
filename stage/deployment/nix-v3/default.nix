@@ -2,7 +2,7 @@
 {
   options = let inherit (lib) mkOption; inherit (lib.types) raw attrsOf enum submodule str bool; in {
     deployments.nix-v3 = mkOption {
-      description = ''
+      description = lib.mkDoc ''
         This deployment strategy uses the new Nix v3 commands to
         deploy a new NixOS System on a remote nix-server.
 
@@ -12,7 +12,7 @@
         options = {
           ip = mkOption {
             type = str;
-            description = ''
+            description = lib.mdDoc ''
               The IP to connect to.
             '';
           };
@@ -20,7 +20,7 @@
           nixpkgs = mkOption {
             type = raw;
             default = localPkgs.path;
-            description = ''
+            description = lib.mdDoc ''
               The path to nixpkgs to use.
             '';
           };
@@ -28,7 +28,7 @@
           user = mkOption {
             type = str;
             default = "root";
-            description = ''
+            description = lib.mkDoc ''
               The SSH user.
             '';
           };
@@ -36,7 +36,7 @@
           profile = mkOption {
             type = str;
             default = "system";
-            description = ''
+            description = lib.mkDoc ''
               The profile to install the system on.
             '';
           };
@@ -44,7 +44,7 @@
           system = mkOption {
             type = str;
             default = "x86_64-linux";
-            description = ''
+            description = lib.mkDoc ''
               The CPU-Architecture the remote server runs on.
             '';
           };
@@ -52,7 +52,7 @@
           applyMode = mkOption {
             type = enum [ "switch" "boot" "test" ];
             default = "switch";
-            description = ''
+            description = lib.mkDoc ''
               What nixos-rebuild command should be used.
             '';
           };
@@ -60,7 +60,7 @@
           useRemoteSudo = mkOption {
             type = bool;
             default = config.user != "root";
-            description = ''
+            description = lib.mkDoc ''
               Use sudo on the remote machine.
             '';
           };
@@ -68,7 +68,7 @@
           substituteOnDestination = mkOption {
             type = bool;
             default = false;
-            description = ''
+            description = lib.mkDoc ''
               Substitute on the remote server.
             '';
           };
@@ -76,7 +76,7 @@
           checkHostKeys = mkOption {
             type = bool;
             default = true;
-            description = ''
+            description = lib.mkDoc ''
               Check host keys when connecting to the server.
             '';
           };
@@ -84,7 +84,7 @@
           noCheckSigs = mkOption {
             type = bool;
             default = config.user == "root";
-            description = ''
+            description = lib.mkDoc ''
               Check if valid signatures are on the remote store path.
             '';
           };
@@ -98,7 +98,7 @@
                 }
               ];
             };
-            description = ''
+            description = lib.mkDoc ''
               The NixOS Configuration to deploy.
             '';
           };
@@ -134,7 +134,7 @@
             ${server.user}@${server.ip} \
             -- \
             ${lib.optionalString (server.useRemoteSudo) "sudo"} \
-            nix --experimental-features "nix-command" profile install --profile /nix/var/nix/profiles/${server.profile} ${toplevel}
+            nix-env --profile /nix/var/nix/profiles/${server.profile} --set ${toplevel}
 
           ${fakeSSH}/bin/ssh \
             ${lib.optionalString (!server.checkHostKeys) "-oUserKnownHostsFile=/dev/null -oStrictHostKeyChecking=no"} \

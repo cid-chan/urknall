@@ -2,7 +2,7 @@
 {
   options = let inherit (lib) mkOption; inherit (lib.types) attrsOf submodule str; in {
     deployments.files = mkOption {
-      description = ''
+      description = lib.mdDoc ''
         This deployment strategy uploads files with the given permission to a remote system.
       '';
       default = {};
@@ -11,14 +11,14 @@
           host = mkOption {
             type = str;
             default = config._module.args.name;
-            description = ''
+            description = lib.mdDoc ''
               The host to connect to.
             '';
           };
           files = mkOption {
             type = attrsOf (submodule ./../../_utils/strategies/files/submodule.nix);
             default = {};
-            description = ''
+            description = lib.mdDoc ''
               The files to upload to the host.
             '';
           };

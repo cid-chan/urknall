@@ -7,7 +7,7 @@ in
     provisioners.terraform.backend.cloud = {
       organization = mkOption {
         type = str;
-        description = ''
+        description = lib.mkDoc ''
           The organization to use.
         '';
       };
@@ -15,7 +15,7 @@ in
       host = mkOption {
         type = str;
         default = "app.terraform.io";
-        description = ''
+        description = lib.mkDoc ''
           The host that contains the terraform cloud backend.
         '';
       };
@@ -23,7 +23,7 @@ in
       tags = mkOption {
         type = listOf str;
         default = [];
-        description = ''
+        description = lib.mkDoc ''
           Tags to attach to the workspace.
         '';
       };
@@ -31,7 +31,7 @@ in
       workspace = mkOption {
         type = nullOr str;
         default = null;
-        description = ''
+        description = lib.mkDoc ''
           The workspace to use. Either tags or workspace must be defined.
         '';
       };
@@ -39,7 +39,7 @@ in
       tokenCommand = mkOption {
         type = nullOr str;
         default = null;
-        description = ''
+        description = lib.mkDoc ''
           The command that retrieves the token for the terraform cloud.
         '';
       };

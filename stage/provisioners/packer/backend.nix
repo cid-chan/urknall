@@ -8,7 +8,7 @@ in
       destroys = mkOption {
         type = listOf str;
         default = [];
-        description = ''
+        description = lib.mkDoc ''
           Code to destroy snapshots when running `urknall destroy`.
         '';
       };
@@ -16,7 +16,7 @@ in
       resolves = mkOption {
         type = listOf str;
         default = [];
-        description = ''
+        description = lib.mkDoc ''
           Urknall Packer will assume that snapshots are reproducable.
           Because of that, resolves can be done by just querying what snapshots match.
         '';
@@ -25,7 +25,7 @@ in
       excludes = mkOption {
         type = listOf str;
         default = [];
-        description = ''
+        description = lib.mkDoc ''
           Urknall Packer will assume that snapshots are reproducable.
           This is why snapshot names should have a nix derivation hash in front of them.
           Excluders check if the build already exists.
@@ -39,21 +39,21 @@ in
             name = mkOption {
               type = str;
               default = config._module.args.name;
-              description = ''
+              description = lib.mkDoc ''
                 The name of the private key.
               '';
             };
 
             source = mkOption {
               type = str;
-              description = ''
+              description = lib.mkDoc ''
                 The source of the provider.
               '';
             };
 
             version = mkOption {
               type = str;
-              description = ''
+              description = lib.mkDoc ''
                 The version of the provider.
               '';
             };

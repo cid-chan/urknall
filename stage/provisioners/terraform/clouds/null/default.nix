@@ -14,7 +14,7 @@ in
           name = mkOption {
             type = str;
             default = config._module.args.name;
-            description = ''
+            description = lib.mdDoc ''
               The name of the server.
             '';
           };
@@ -29,7 +29,7 @@ in
           generation = mkOption {
             type = str;
             default = "0";
-            description = ''
+            description = lib.mkDoc ''
               The generation of the resource.
               Change the number to force recreation.
             '';
@@ -37,30 +37,30 @@ in
 
           host = mkOption {
             type = str;
-            description = ''
+            description = lib.mdDoc ''
               The IP-Address that can reach the server.
             '';
           };
 
           provisioningHost = mkOption {
             type = str;
-            default = config.host;
-            description = ''
+            description = lib.mdDoc ''
               The IP-Address that the provisioningHost currently has.
+              Defaults to the variable defined in host.
             '';
           };
 
           partitionType = mkOption {
             type = enum [ "dos" "gpt" ];
             default = "dos";
-            description = ''
+            description = lib.mdDoc ''
               What partitioning table should be used?
             '';
           };
 
           system = mkOption {
             type = submodule (import ./../../../../_utils/strategies/rescue/submodule.nix { system = "x86_64-linux"; });
-            description = ''
+            description = lib.mdDoc ''
               Install this NixOS System.
 
               Snapshot and nixosSystem are mutually incompatible.
@@ -71,10 +71,14 @@ in
           files = mkOption {
             type = attrsOf (submodule (import ./../../../../_utils/strategies/files/submodule.nix));
             default = {};
-            description = ''
+            description = lib.mdDoc ''
               Additional files to copy to the target
             '';
           };
+        };
+
+        config = {
+          provisioningHost = lib.urknall.modules.mkOptionDefault config.host;
         };
       }));
 
@@ -101,6 +105,7 @@ in
             tableType = module.partitionType;
 
             preActivate = "${(localPkgs.callPackage ./../../../../_utils/strategies/files {
+
               inherit lib;
               module = module.files;
               targetRewriter = (path: "/mnt${path}");
