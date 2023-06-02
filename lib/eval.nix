@@ -39,6 +39,8 @@
                 '';
 
                 merge = loc: defs: (import "${toString nixpkgs}/nixos/lib/eval-config.nix") {
+                  system = null;
+
                   specialArgs = {
                     inherit futures;
                     urknallConfig = urknall.config;
