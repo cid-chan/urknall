@@ -13,6 +13,7 @@ let
     syntax = ./syntax.nix;
     derivation = ./derivation.nix;
     assertions = ./assertions.nix;
+    modules = ./modules.nix;
   };
 
   imported = mapAttrs (_: v: import v) targets;
