@@ -146,6 +146,9 @@
                   if [ ! -z "$STAGE_FILE_LOC" ]; then
                     cp -a $(echo $STAGE_FILE_LOC | sed "s/;/ /g") $TEMP_FLAKE/resolves
                   fi
+                  pushd $TEMP_FLAKE >/dev/null
+                  nix flake lock 2>/dev/null >/dev/null
+                  popd >/dev/null
                 )
                 nix build "path:''${TEMP_FLAKE}#urknall-resolve.${localPkgs.system}.default.${operation}" --log-format internal-json --json --no-link -v "$@" | ${localPkgs.jq}/bin/jq -r '"\(.[0].outputs.out)"'
                 EXITCODE=''${PIPESTATUS[0]}
