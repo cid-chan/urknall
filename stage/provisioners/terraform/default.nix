@@ -85,7 +85,7 @@ in
 
       package = mkOption {
         type = package;
-        default = localPkgs.opentufu;
+        default = localPkgs.opentofu;
         description = ''
           The terraform package to use.
         '';
