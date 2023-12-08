@@ -37,7 +37,7 @@ let
     localPkgs.runCommand "main.tf" {} ''
       cd /build
       dd if=${rawFile} of=./main.tf
-      ${localPkgs.terraform}/bin/terraform fmt -list=false /build || (cat ${rawFile} && exit 1)
+      ${cfg.package}/bin/terraform fmt -list=false /build || (cat ${rawFile} && exit 1)
       cp ./main.tf $out
     '';
 
@@ -67,8 +67,10 @@ let
       chmod ${v.chmod} assets/${v.name}
     '') cfg.project.assets)}
 
-    ${localPkgs.terraform}/bin/terraform init ${cfg.project.initArguments} ${lib.optionalString noOutput ">/dev/null 2>/dev/null"}
+    ${cfg.package}/bin/terraform init ${cfg.project.initArguments} ${lib.optionalString noOutput ">/dev/null 2>/dev/null"}
   '';
+
+  terraform = cfg.package;
 in
 {
   imports = [
@@ -80,6 +82,14 @@ in
   options = let inherit (lib) mkOption mkEnableOption; inherit (lib.types) nullOr attrsOf anything str lines separatedString submodule bool; in {
     provisioners.terraform = {
       enable = mkEnableOption "terraform";
+
+      package = mkOption {
+        type = package;
+        default = localPkgs.opentufu;
+        description = ''
+          The terraform package to use.
+        '';
+      };
 
       project = {
         setup = mkOption {
@@ -240,23 +250,23 @@ in
     urknall.appliers = ''
       echo Using ${module} as main.tf
       ${setupCommands false}
-      ${localPkgs.terraform}/bin/terraform apply ${cfg.project.arguments} -auto-approve
+      ${terraform}/bin/terraform apply ${cfg.project.arguments} -auto-approve
     '';
 
     urknall.destroyers = ''
       echo Using ${module} as main.tf
       ${setupCommands false}
-      ${localPkgs.terraform}/bin/terraform destroy ${cfg.project.arguments} -auto-approve
+      ${terraform}/bin/terraform destroy ${cfg.project.arguments} -auto-approve
     '';
 
     urknall.resolvers = ''
       ${setupCommands true}
-      ${localPkgs.terraform}/bin/terraform output ${cfg.project.arguments} -json | ${localPkgs.jq}/bin/jq 'map_values(.value) | with_entries(.key = "tf_output_\(.key)")'
+      ${terraform}/bin/terraform output ${cfg.project.arguments} -json | ${localPkgs.jq}/bin/jq 'map_values(.value) | with_entries(.key = "tf_output_\(.key)")'
     '';
 
     urknall.shell = ''
       ${setupCommands false}
-      export PATH=${lib.makeBinPath [localPkgs.terraform]}:$PATH
+      export PATH=${lib.makeBinPath [ terraform ]}:$PATH
     '';
   };
 }
