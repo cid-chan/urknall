@@ -37,7 +37,7 @@ let
     localPkgs.runCommand "main.tf" {} ''
       cd /build
       dd if=${rawFile} of=./main.tf
-      ${cfg.package}/bin/terraform fmt -list=false /build || (cat ${rawFile} && exit 1)
+      ${terraform} fmt -list=false /build || (cat ${rawFile} && exit 1)
       cp ./main.tf $out
     '';
 
@@ -67,10 +67,14 @@ let
       chmod ${v.chmod} assets/${v.name}
     '') cfg.project.assets)}
 
-    ${cfg.package}/bin/terraform init ${cfg.project.initArguments} ${lib.optionalString noOutput ">/dev/null 2>/dev/null"}
+    ${terraform} init ${cfg.project.initArguments} ${lib.optionalString noOutput ">/dev/null 2>/dev/null"}
   '';
 
-  terraform = cfg.package;
+  terraform = 
+    if cfg.package.name == "terraform" then
+      "${cfg.package}/bin/terraform"
+    else
+      "${cfg.package}/bin/tofu";
 in
 {
   imports = [
@@ -250,18 +254,18 @@ in
     urknall.appliers = ''
       echo Using ${module} as main.tf
       ${setupCommands false}
-      ${terraform}/bin/terraform apply ${cfg.project.arguments} -auto-approve
+      ${terraform} apply ${cfg.project.arguments} -auto-approve
     '';
 
     urknall.destroyers = ''
       echo Using ${module} as main.tf
       ${setupCommands false}
-      ${terraform}/bin/terraform destroy ${cfg.project.arguments} -auto-approve
+      ${terraform} destroy ${cfg.project.arguments} -auto-approve
     '';
 
     urknall.resolvers = ''
       ${setupCommands true}
-      ${terraform}/bin/terraform output ${cfg.project.arguments} -json | ${localPkgs.jq}/bin/jq 'map_values(.value) | with_entries(.key = "tf_output_\(.key)")'
+      ${terraform} output ${cfg.project.arguments} -json | ${localPkgs.jq}/bin/jq 'map_values(.value) | with_entries(.key = "tf_output_\(.key)")'
     '';
 
     urknall.shell = ''
