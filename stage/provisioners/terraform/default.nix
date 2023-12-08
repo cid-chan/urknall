@@ -79,7 +79,7 @@ in
     ./clouds
   ];
 
-  options = let inherit (lib) mkOption mkEnableOption; inherit (lib.types) nullOr attrsOf anything str lines separatedString submodule bool; in {
+  options = let inherit (lib) mkOption mkEnableOption; inherit (lib.types) nullOr attrsOf anything str lines separatedString submodule bool package; in {
     provisioners.terraform = {
       enable = mkEnableOption "terraform";
 
