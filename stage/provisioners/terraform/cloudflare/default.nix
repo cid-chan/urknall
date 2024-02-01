@@ -58,7 +58,7 @@ in
     ({
       provisioners.terraform.backend.providers.cloudflare = {
         source = "cloudflare/cloudflare";
-        version = "3.26.0";
+        version = "4.23.0";
       };
       provisioners.terraform.project.module = ''
         provider "cloudflare" {
