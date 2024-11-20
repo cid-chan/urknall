@@ -119,6 +119,7 @@ writeShellScript "provision" ''
 
   ${lib.optionalString rebootAfterInstall ''
     ssh root@$IPADDR -- reboot
+    sleep 10
   ''}
 
   # We have liftoff!
