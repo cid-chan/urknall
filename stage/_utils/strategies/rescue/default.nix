@@ -40,6 +40,10 @@ writeShellScript "provision" ''
     sleep 1
   done
 
+  function copyClosureSafe() {
+    nix-copy-closure --to root@$IPADDR $1 -s || (nix-store --export $(nix-store -qR $1) | ssh root@$IPADDR -- nix-store --import) || exit 1
+  }
+
   ${lib.optionalString (module.kexec.enable) (
     let
       bundle = module.kexec.config.config.system.build.kexec_bundle_2;
@@ -81,10 +85,6 @@ writeShellScript "provision" ''
     ''
 
   )}
-
-  function copyClosureSafe() {
-    nix-copy-closure --to root@$IPADDR $1 -s || (nix-store --export $(nix-store -qR $1) | ssh root@$IPADDR -- nix-store --import) || exit 1
-  }
 
   # Install Nix
   runScript ${./rescue.sh} rescue.sh
