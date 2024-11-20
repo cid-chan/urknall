@@ -43,16 +43,29 @@ writeShellScript "provision" ''
   ${lib.optionalString (module.kexec.enable) (
     let
       bundle = module.kexec.config.config.system.build.kexec_bundle_2;
+      script = module.kexec.config.config.system.build.kexec_script;
     in
     ''
       if ! ssh root@$IPADDR -- test -e /run/current-system/sw/is_kexec ; then
         # Push the kexec-bundle to the remote system.
-        echo Uploading kexec_bundle from ${bundle}
+        echo Running KEXEC Script
 
-        if ! ssh root@$IPADDR -- sh -c 'echo "${builtins.hashFile "sha256" bundle} /root/kexec" | sha256sum --check --status' ; then
-          scp ${bundle} root@$ESC_IPADDR:/root/kexec
+        if ssh root@$IPADDR -- test -d /nix; then
+          echo Uploading kexec-script from ${script}
+
+          # On Systems with a nix-store, just copy the closure of the script and trigger it.
+          copyClosureSafe ${script}
+          ssh root@$IPADDR -- ${script} &
+
+        else
+          echo Uploading kexec_bundle from ${bundle}
+
+          # On Systems that don't have a working nix-store, run the nixos-bundle
+          if ! ssh root@$IPADDR -- sh -c 'echo "${builtins.hashFile "sha256" bundle} /root/kexec" | sha256sum --check --status' ; then
+            scp ${bundle} root@$ESC_IPADDR:/root/kexec
+          fi
+          ssh root@$IPADDR -- "cd /tmp; /root/kexec" &
         fi
-        ssh root@$IPADDR -- /root/kexec &
 
         sleep 10
 
@@ -66,6 +79,7 @@ writeShellScript "provision" ''
         kill %1
       fi
     ''
+
   )}
 
   function copyClosureSafe() {
