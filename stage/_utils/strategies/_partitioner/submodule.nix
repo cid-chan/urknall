@@ -75,7 +75,7 @@ in
     };
 
     partitionType = mkOption {
-      type = enum [ "efi" "swap" "linux" "none"];
+      type = enum [ "efi" "swap" "linux" "bios" "none"];
       description = lib.mdDoc ''
         Defines the partition type.
         It is usually automatically detected by the used filesystem.
