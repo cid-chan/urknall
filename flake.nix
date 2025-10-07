@@ -9,7 +9,7 @@
 
   outputs = { self, nixpkgs, flake-utils, ... }@inputs: 
     let 
-      by-system = flake-utils.lib.eachSystem ["x86_64-linux" "aarch64-darwin"] (system: 
+      by-system = flake-utils.lib.eachSystem ["x86_64-linux" "aarch64-darwin" "aarch64-linux"] (system: 
         let
           pkgs = import nixpkgs { inherit system; };
         in
