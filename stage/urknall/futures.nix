@@ -1,9 +1,9 @@
 { lib, config, localPkgs, ... }:
 {
-  options = let inherit (lib) mkOption; inherit (lib.types) attrsOf string; in {
+  options = let inherit (lib) mkOption; inherit (lib.types) attrsOf str; in {
     urknall = {
       resolveCommands = mkOption {
-        type = attrsOf string;
+        type = attrsOf str;
         default = {};
         description = ''
           Each value in this set is a command that is executed.
