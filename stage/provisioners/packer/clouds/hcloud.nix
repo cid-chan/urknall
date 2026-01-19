@@ -31,7 +31,7 @@ in
 
           serverType = mkOption {
             type = enum ([
-              "cx11" "cpx11" "cx22" "cpx21" "cx32" "cpx31" "cx42" "cpx41" "cx52" "cpx51"              # Shared Resources
+              "cx11" "cpx11" "cx23" "cpx21" "cx32" "cpx31" "cx42" "cpx41" "cx52" "cpx51"              # Shared Resources
               "ccx13" "ccx23" "ccx33" "ccx43" "ccx53" "ccx63"                                         # Dedicated Resources
             ] ++ armTypes);
             default = "cx11";
