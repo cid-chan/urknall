@@ -2,7 +2,7 @@
 
 install() {
   if command -v apt; then
-    apt update
+    apt update || true
     apt install "$1" --yes
   fi
 
